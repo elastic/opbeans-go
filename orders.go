@@ -9,41 +9,28 @@ import (
 )
 
 type Order struct {
-	ID           int       `json:"id"`
-	CreatedAt    time.Time `json:"created_at"`
-	CustomerID   int       `json:"customer_id"`
-	CustomerName string    `json:"customer_name,omitempty"`
+	ID           int                `json:"id"`
+	CreatedAt    time.Time          `json:"created_at"`
+	CustomerID   int                `json:"customer_id"`
+	CustomerName string             `json:"customer_name,omitempty"`
+	Lines        []ProductOrderLine `json:"lines,omitempty"`
+}
+
+type ProductOrderLine struct {
+	Product
+	Amount int `json:"amount"`
 }
 
 func getOrders(db *sql.DB) ([]Order, error) {
-	limit := 1000
-	return queryOrders(db, nil, &limit)
-}
-
-func getOrder(db *sql.DB, id int) (*Order, error) {
-	orders, err := queryOrders(db, &id, nil)
-	if err != nil || len(orders) == 0 {
-		return nil, err
-	}
-	return &orders[0], nil
-}
-
-func queryOrders(db *sql.DB, id *int, limit *int) ([]Order, error) {
-	var args []interface{}
+	const limit = 1000
 	queryString := `SELECT
   orders.id, orders.created_at,
   customers.id, customers.full_name
 FROM orders JOIN customers ON orders.customer_id=customers.id
 `
-	if id != nil {
-		queryString += "WHERE orders.id=?\n"
-		args = append(args, *id)
-	}
-	if limit != nil {
-		queryString += fmt.Sprintf("LIMIT %d\n", *limit)
-	}
+	queryString += fmt.Sprintf("LIMIT %d\n", limit)
 
-	rows, err := db.Query(queryString, args...)
+	rows, err := db.Query(queryString)
 	if err != nil {
 		return nil, errors.Wrap(err, "querying orders")
 	}
@@ -61,4 +48,47 @@ FROM orders JOIN customers ON orders.customer_id=customers.id
 		orders = append(orders, o)
 	}
 	return orders, rows.Err()
+}
+
+func getOrder(db *sql.DB, id int) (*Order, error) {
+	queryString := `SELECT
+  orders.id, orders.created_at, customer_id
+FROM orders WHERE orders.id=?
+`
+	row := db.QueryRow(queryString, id)
+	var order Order
+	if err := row.Scan(&order.ID, &order.CreatedAt, &order.CustomerID); err != nil {
+		return nil, errors.Wrap(err, "querying order")
+	}
+
+	// NOTE(axw) order lines aren't rendered by the UI, but are kept here for
+	// consistency with opbeans(-python). Its presence will have an impact on
+	// latency at least.
+	queryString = `SELECT
+  product_id, amount,
+  products.sku, products.name, products.description,
+  products.type_id, products.stock, products.cost, products.selling_price
+FROM products JOIN order_lines ON products.id=order_lines.product_id
+WHERE order_lines.order_id=?
+`
+	rows, err := db.Query(queryString, id)
+	if err != nil {
+		return nil, errors.Wrap(err, "querying product order lines")
+	}
+	defer rows.Close()
+
+	var lines []ProductOrderLine
+	for rows.Next() {
+		var l ProductOrderLine
+		if err := rows.Scan(
+			&l.ID, &l.Amount,
+			&l.SKU, &l.Name, &l.Description,
+			&l.TypeID, &l.Stock, &l.Cost, &l.SellingPrice,
+		); err != nil {
+			return nil, err
+		}
+		lines = append(lines, l)
+	}
+	order.Lines = lines
+	return &order, rows.Err()
 }
