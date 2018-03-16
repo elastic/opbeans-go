@@ -3,16 +3,21 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/elastic/apm-agent-go"
+	"github.com/elastic/apm-agent-go/contrib/apmgin"
+	"github.com/elastic/apm-agent-go/contrib/apmsql"
+	_ "github.com/elastic/apm-agent-go/contrib/apmsql/pq"
+	_ "github.com/elastic/apm-agent-go/contrib/apmsql/sqlite3"
 	"github.com/garyburd/redigo/redis"
 	"github.com/gin-contrib/cache"
 	"github.com/gin-contrib/cache/persistence"
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
-	_ "github.com/lib/pq"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -47,12 +52,17 @@ func Main(logger *logrus.Logger) error {
 		return err
 	}
 
+	elasticapm.DefaultTracer.SetProcessor(apmgin.Processor{})
+	elasticapm.DefaultTracer.SetLogger(logrus.StandardLogger())
+
 	r := newRouter(logger, cache)
+	pprof.Register(r)
 	r.Static("/static", "./static")
 	r.StaticFile("/favicon.ico", "./static/favicon.ico")
 	r.Static("/images", "./demo/images")
 	r.LoadHTMLGlob("templates/*")
 	r.GET("/", handleIndex)
+	r.GET("/panic", handlePanic)
 
 	indexPrefixes := []string{"/dashboard", "/products", "/customers", "/orders"}
 	for _, path := range []string{"/dashboard", "/products", "/customers", "/orders"} {
@@ -82,15 +92,15 @@ func newDatabase() (*sql.DB, error) {
 			*database,
 		)
 	}
-	conn, err := sql.Open(fields[0], fields[1])
+	db, err := apmsql.Open(fields[0], fields[1])
 	if err != nil {
 		return nil, err
 	}
-	if err := conn.Ping(); err != nil {
-		conn.Close()
+	if err := db.Ping(); err != nil {
+		db.Close()
 		return nil, err
 	}
-	return conn, nil
+	return db, nil
 }
 
 func newCache() (persistence.CacheStore, error) {
@@ -129,12 +139,25 @@ func newRouter(logger *logrus.Logger, cacheStore persistence.CacheStore) *gin.En
 	// TODO(axw) use ginrus when we have configuration
 	// for logging to elasticsearch.
 	//r.Use(ginrus.Ginrus(logger, time.RFC3339, true))
-	r.Use(gin.Logger())
+	//r.Use(gin.Logger())
 	r.Use(gin.Recovery())
+	r.Use(apmgin.Middleware(r, nil))
 	r.Use(cache.Cache(&cacheStore))
 	return r
 }
 
 func handleIndex(c *gin.Context) {
 	c.HTML(http.StatusOK, "index.tmpl", gin.H{})
+}
+
+func handlePanic(c *gin.Context) {
+	switch c.Query("type") {
+	case "string":
+		panic("boom")
+	case "pkg/errors":
+		err := errors.New("boom")
+		panic(errors.Wrap(err, "failure while shaking the room"))
+	default:
+		panic(fmt.Errorf("sonic %s", "boom"))
+	}
 }

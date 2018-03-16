@@ -6,9 +6,11 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/elastic/apm-agent-go"
 	"github.com/gin-contrib/cache"
 	"github.com/gin-contrib/cache/persistence"
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -34,8 +36,6 @@ func (h apiHandlers) getStats(c *gin.Context) {
 	cacheValue, _ := c.Get(cache.CACHE_MIDDLEWARE_KEY)
 	cache := *cacheValue.(*persistence.CacheStore)
 
-	// TODO(axw) tag transaction with "served_from_cache"
-
 	const cacheKey = "shop-stats"
 	var stats *Stats
 	err := cache.Get(cacheKey, &stats)
@@ -43,21 +43,30 @@ func (h apiHandlers) getStats(c *gin.Context) {
 	case nil:
 		h.log.Debug("serving stats from cache")
 		c.JSON(http.StatusOK, stats)
+		if tx := elasticapm.TransactionFromContext(c.Request.Context()); tx != nil {
+			tx.SetTag("served_from_cache", "true")
+		}
 		return
 	case persistence.ErrCacheMiss:
 		// fetch and cache below
+		if tx := elasticapm.TransactionFromContext(c.Request.Context()); tx != nil {
+			tx.SetTag("served_from_cache", "false")
+		}
 		break
 	default:
+		err := errors.Wrap(err, "failed to get stats from cache")
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
-	stats, err = getStats(h.db)
+	stats, err = getStats(c.Request.Context(), h.db)
 	if err != nil {
+		err := errors.Wrap(err, "failed to query stats")
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 	if err := cache.Set(cacheKey, stats, time.Minute); err != nil {
+		err := errors.Wrap(err, "failed to cache stats")
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
@@ -66,7 +75,7 @@ func (h apiHandlers) getStats(c *gin.Context) {
 }
 
 func (h apiHandlers) getProducts(c *gin.Context) {
-	products, err := getProducts(h.db)
+	products, err := getProducts(c.Request.Context(), h.db)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
@@ -75,7 +84,7 @@ func (h apiHandlers) getProducts(c *gin.Context) {
 }
 
 func (h apiHandlers) getTopProducts(c *gin.Context) {
-	products, err := getTopProducts(h.db)
+	products, err := getTopProducts(c.Request.Context(), h.db)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
@@ -86,7 +95,7 @@ func (h apiHandlers) getTopProducts(c *gin.Context) {
 func (h apiHandlers) getProductDetails(c *gin.Context) {
 	idString := c.Param("id")
 	if idString == "top" {
-		products, err := getTopProducts(h.db)
+		products, err := getTopProducts(c.Request.Context(), h.db)
 		if err != nil {
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
@@ -98,11 +107,13 @@ func (h apiHandlers) getProductDetails(c *gin.Context) {
 	// Product by ID.
 	id, err := strconv.Atoi(idString)
 	if err != nil {
+		err := errors.Wrap(err, "failed to parse product ID")
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-	product, err := getProduct(h.db, id)
+	product, err := getProduct(c.Request.Context(), h.db, id)
 	if err != nil {
+		err := errors.Wrap(err, "failed to get product")
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
@@ -127,7 +138,7 @@ func (h apiHandlers) getProductCustomers(c *gin.Context) {
 			return
 		}
 	}
-	customers, err := getProductCustomers(h.db, id, limit)
+	customers, err := getProductCustomers(c.Request.Context(), h.db, id, limit)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
@@ -136,7 +147,7 @@ func (h apiHandlers) getProductCustomers(c *gin.Context) {
 }
 
 func (h apiHandlers) getProductTypes(c *gin.Context) {
-	productTypes, err := getProductTypes(h.db)
+	productTypes, err := getProductTypes(c.Request.Context(), h.db)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
@@ -145,7 +156,7 @@ func (h apiHandlers) getProductTypes(c *gin.Context) {
 }
 
 func (h apiHandlers) getCustomers(c *gin.Context) {
-	customers, err := getCustomers(h.db)
+	customers, err := getCustomers(c.Request.Context(), h.db)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
@@ -156,11 +167,13 @@ func (h apiHandlers) getCustomers(c *gin.Context) {
 func (h apiHandlers) getCustomerDetails(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
+		err := errors.Wrap(err, "failed to parse customer ID")
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-	customer, err := getCustomer(h.db, id)
+	customer, err := getCustomer(c.Request.Context(), h.db, id)
 	if err != nil {
+		err := errors.Wrap(err, "failed to get customer details")
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
@@ -172,7 +185,7 @@ func (h apiHandlers) getCustomerDetails(c *gin.Context) {
 }
 
 func (h apiHandlers) getOrders(c *gin.Context) {
-	orders, err := getOrders(h.db)
+	orders, err := getOrders(c.Request.Context(), h.db)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
@@ -186,7 +199,7 @@ func (h apiHandlers) getOrderDetails(c *gin.Context) {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-	customer, err := getOrder(h.db, id)
+	customer, err := getOrder(c.Request.Context(), h.db, id)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return

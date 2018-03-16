@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 )
@@ -16,23 +17,23 @@ type Customer struct {
 	Country     string `json:"country"`
 }
 
-func getCustomers(db *sql.DB) ([]Customer, error) {
-	return queryCustomers(db, nil, nil, nil)
+func getCustomers(ctx context.Context, db *sql.DB) ([]Customer, error) {
+	return queryCustomers(ctx, db, nil, nil, nil)
 }
 
-func getProductCustomers(db *sql.DB, productId, limit int) ([]Customer, error) {
-	return queryCustomers(db, nil, &productId, &limit)
+func getProductCustomers(ctx context.Context, db *sql.DB, productId, limit int) ([]Customer, error) {
+	return queryCustomers(ctx, db, nil, &productId, &limit)
 }
 
-func getCustomer(db *sql.DB, id int) (*Customer, error) {
-	customers, err := queryCustomers(db, &id, nil, nil)
+func getCustomer(ctx context.Context, db *sql.DB, id int) (*Customer, error) {
+	customers, err := queryCustomers(ctx, db, &id, nil, nil)
 	if err != nil || len(customers) == 0 {
 		return nil, err
 	}
 	return &customers[0], nil
 }
 
-func queryCustomers(db *sql.DB, id, productId, limit *int) ([]Customer, error) {
+func queryCustomers(ctx context.Context, db *sql.DB, id, productId, limit *int) ([]Customer, error) {
 	var args []interface{}
 	queryString := `
 SELECT
@@ -55,7 +56,7 @@ FROM customers
 		queryString += fmt.Sprintf("LIMIT %d\n", *limit)
 	}
 
-	rows, err := db.Query(queryString, args...)
+	rows, err := db.QueryContext(ctx, queryString, args...)
 	if err != nil {
 		return nil, err
 	}

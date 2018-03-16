@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 
 	"github.com/pkg/errors"
@@ -17,7 +18,7 @@ type Stats struct {
 	} `json:"numbers"`
 }
 
-func getStats(db *sql.DB) (*Stats, error) {
+func getStats(ctx context.Context, db *sql.DB) (*Stats, error) {
 	var stats Stats
 	countParams := []struct {
 		table  string
@@ -28,14 +29,14 @@ func getStats(db *sql.DB) (*Stats, error) {
 		{"orders", &stats.Orders},
 	}
 	for _, p := range countParams {
-		row := db.QueryRow(`SELECT COUNT(*) FROM ` + p.table)
+		row := db.QueryRowContext(ctx, `SELECT COUNT(*) FROM `+p.table)
 		if err := row.Scan(p.result); err != nil {
 			return nil, errors.Wrap(err, "querying "+p.table)
 		}
 	}
 
 	var revenue, cost, profit *int
-	row := db.QueryRow(`
+	row := db.QueryRowContext(ctx, `
 SELECT
   SUM(selling_price), SUM(cost), SUM(selling_price-cost)
 FROM products JOIN order_lines ON products.id=order_lines.product_id
