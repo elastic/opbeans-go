@@ -44,13 +44,13 @@ func (h apiHandlers) getStats(c *gin.Context) {
 		h.log.Debug("serving stats from cache")
 		c.JSON(http.StatusOK, stats)
 		if tx := elasticapm.TransactionFromContext(c.Request.Context()); tx != nil {
-			tx.SetTag("served_from_cache", "true")
+			tx.Context.SetTag("served_from_cache", "true")
 		}
 		return
 	case persistence.ErrCacheMiss:
 		// fetch and cache below
 		if tx := elasticapm.TransactionFromContext(c.Request.Context()); tx != nil {
-			tx.SetTag("served_from_cache", "false")
+			tx.Context.SetTag("served_from_cache", "false")
 		}
 		break
 	default:

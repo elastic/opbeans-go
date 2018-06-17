@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/elastic/apm-agent-go"
-	"github.com/elastic/apm-agent-go/contrib/apmgin"
-	"github.com/elastic/apm-agent-go/contrib/apmsql"
-	_ "github.com/elastic/apm-agent-go/contrib/apmsql/pq"
-	_ "github.com/elastic/apm-agent-go/contrib/apmsql/sqlite3"
+	"github.com/elastic/apm-agent-go/module/apmgin"
+	"github.com/elastic/apm-agent-go/module/apmsql"
+	_ "github.com/elastic/apm-agent-go/module/apmsql/pq"
+	_ "github.com/elastic/apm-agent-go/module/apmsql/sqlite3"
 	"github.com/garyburd/redigo/redis"
 	"github.com/gin-contrib/cache"
 	"github.com/gin-contrib/cache/persistence"
@@ -52,7 +52,6 @@ func Main(logger *logrus.Logger) error {
 		return err
 	}
 
-	elasticapm.DefaultTracer.SetProcessor(apmgin.Processor{})
 	elasticapm.DefaultTracer.SetLogger(logrus.StandardLogger())
 
 	r := newRouter(logger, cache)
@@ -141,7 +140,7 @@ func newRouter(logger *logrus.Logger, cacheStore persistence.CacheStore) *gin.En
 	//r.Use(ginrus.Ginrus(logger, time.RFC3339, true))
 	//r.Use(gin.Logger())
 	r.Use(gin.Recovery())
-	r.Use(apmgin.Middleware(r, nil))
+	r.Use(apmgin.Middleware(r))
 	r.Use(cache.Cache(&cacheStore))
 	return r
 }
