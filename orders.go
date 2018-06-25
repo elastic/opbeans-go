@@ -62,9 +62,6 @@ FROM orders WHERE orders.id=?
 		return nil, errors.Wrap(err, "querying order")
 	}
 
-	// NOTE(axw) order lines aren't rendered by the UI, but are kept here for
-	// consistency with opbeans(-python). Its presence will have an impact on
-	// latency at least.
 	queryString = `SELECT
   product_id, amount,
   products.sku, products.name, products.description,
