@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"time"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
 
@@ -22,7 +22,7 @@ type ProductOrderLine struct {
 	Amount int `json:"amount"`
 }
 
-func getOrders(ctx context.Context, db *sql.DB) ([]Order, error) {
+func getOrders(ctx context.Context, db *sqlx.DB) ([]Order, error) {
 	const limit = 1000
 	queryString := `SELECT
   orders.id, orders.created_at,
@@ -51,24 +51,24 @@ FROM orders JOIN customers ON orders.customer_id=customers.id
 	return orders, rows.Err()
 }
 
-func getOrder(ctx context.Context, db *sql.DB, id int) (*Order, error) {
-	queryString := `SELECT
+func getOrder(ctx context.Context, db *sqlx.DB, id int) (*Order, error) {
+	queryString := db.Rebind(`SELECT
   orders.id, orders.created_at, customer_id
-FROM orders WHERE orders.id=?
-`
+FROM orders WHERE orders.id=?`)
+
 	row := db.QueryRowContext(ctx, queryString, id)
 	var order Order
 	if err := row.Scan(&order.ID, &order.CreatedAt, &order.CustomerID); err != nil {
 		return nil, errors.Wrap(err, "querying order")
 	}
 
-	queryString = `SELECT
+	queryString = db.Rebind(`SELECT
   product_id, amount,
   products.sku, products.name, products.description,
   products.type_id, products.stock, products.cost, products.selling_price
 FROM products JOIN order_lines ON products.id=order_lines.product_id
-WHERE order_lines.order_id=?
-`
+WHERE order_lines.order_id=?`)
+
 	rows, err := db.QueryContext(ctx, queryString, id)
 	if err != nil {
 		return nil, errors.Wrap(err, "querying product order lines")

@@ -4,13 +4,13 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"database/sql"
 	"io"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
 
-func ExecCommands(ctx context.Context, db *sql.DB, r io.Reader) error {
+func ExecCommands(ctx context.Context, db *sqlx.DB, r io.Reader) error {
 	scanner := bufio.NewScanner(r)
 	scanner.Split(scanStatements)
 	for scanner.Scan() {

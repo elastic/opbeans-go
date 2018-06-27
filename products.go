@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
 
@@ -26,15 +26,15 @@ type ProductType struct {
 	Name string `json:"name"`
 }
 
-func getProducts(ctx context.Context, db *sql.DB) ([]Product, error) {
+func getProducts(ctx context.Context, db *sqlx.DB) ([]Product, error) {
 	return queryProducts(ctx, db, nil)
 }
 
-func getTopProducts(ctx context.Context, db *sql.DB) ([]Product, error) {
+func getTopProducts(ctx context.Context, db *sqlx.DB) ([]Product, error) {
 	const limit = 3 // top 3 best-selling products
 	queryString := `SELECT
 	  id, sku, name, stock, SUM(order_lines.amount) AS sold
-FROM products JOIN order_lines ON id=product_id GROUP BY product_id ORDER BY sold DESC
+FROM products JOIN order_lines ON id=product_id GROUP BY products.id ORDER BY sold DESC
 `
 	queryString += fmt.Sprintf("LIMIT %d\n", limit)
 
@@ -55,7 +55,7 @@ FROM products JOIN order_lines ON id=product_id GROUP BY product_id ORDER BY sol
 	return products, rows.Err()
 }
 
-func getProduct(ctx context.Context, db *sql.DB, id int) (*Product, error) {
+func getProduct(ctx context.Context, db *sqlx.DB, id int) (*Product, error) {
 	products, err := queryProducts(ctx, db, &id)
 	if err != nil || len(products) == 0 {
 		return nil, err
@@ -63,7 +63,7 @@ func getProduct(ctx context.Context, db *sql.DB, id int) (*Product, error) {
 	return &products[0], nil
 }
 
-func queryProducts(ctx context.Context, db *sql.DB, id *int) ([]Product, error) {
+func queryProducts(ctx context.Context, db *sqlx.DB, id *int) ([]Product, error) {
 	var args []interface{}
 	queryString := `SELECT
   products.id, products.sku, products.name, products.description,
@@ -76,7 +76,7 @@ FROM products JOIN product_types ON type_id=product_types.id
 		args = append(args, *id)
 	}
 
-	rows, err := db.QueryContext(ctx, queryString, args...)
+	rows, err := db.QueryContext(ctx, db.Rebind(queryString), args...)
 	if err != nil {
 		return nil, errors.Wrap(err, "querying products")
 	}
@@ -97,7 +97,7 @@ FROM products JOIN product_types ON type_id=product_types.id
 	return products, rows.Err()
 }
 
-func getProductTypes(ctx context.Context, db *sql.DB) ([]ProductType, error) {
+func getProductTypes(ctx context.Context, db *sqlx.DB) ([]ProductType, error) {
 	rows, err := db.QueryContext(ctx, "SELECT id, name FROM product_types")
 	if err != nil {
 		return nil, err

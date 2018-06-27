@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"net/http"
 	"strconv"
 	"time"
@@ -10,11 +9,12 @@ import (
 	"github.com/gin-contrib/cache"
 	"github.com/gin-contrib/cache/persistence"
 	"github.com/gin-gonic/gin"
+	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
-func addAPIHandlers(r *gin.RouterGroup, db *sql.DB, logger *logrus.Logger) {
+func addAPIHandlers(r *gin.RouterGroup, db *sqlx.DB, logger *logrus.Logger) {
 	h := apiHandlers{db, logger}
 	r.GET("/stats", h.getStats)
 	r.GET("/products", h.getProducts)
@@ -28,7 +28,7 @@ func addAPIHandlers(r *gin.RouterGroup, db *sql.DB, logger *logrus.Logger) {
 }
 
 type apiHandlers struct {
-	db  *sql.DB
+	db  *sqlx.DB
 	log *logrus.Logger
 }
 

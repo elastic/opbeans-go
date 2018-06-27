@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"database/sql"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -17,6 +16,7 @@ import (
 	"github.com/elastic/apm-agent-go"
 	"github.com/elastic/apm-agent-go/module/apmgin"
 	"github.com/elastic/apm-agent-go/module/apmsql"
+	"github.com/jmoiron/sqlx"
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/gin-contrib/cache"
@@ -155,7 +155,7 @@ func healthcheck(logger *logrus.Logger) error {
 	return json.NewDecoder(resp.Body).Decode(&orders)
 }
 
-func newDatabase(logger *logrus.Logger) (*sql.DB, error) {
+func newDatabase(logger *logrus.Logger) (*sqlx.DB, error) {
 	fields := strings.SplitN(*database, ":", 2)
 	if len(fields) != 2 {
 		return nil, errors.Errorf(
@@ -173,11 +173,12 @@ func newDatabase(logger *logrus.Logger) (*sql.DB, error) {
 		db.Close()
 		return nil, err
 	}
-	if err := initDatabase(db, driver, logger); err != nil {
+	dbx := sqlx.NewDb(db, driver)
+	if err := initDatabase(dbx, driver, logger); err != nil {
 		db.Close()
 		return nil, err
 	}
-	return db, nil
+	return dbx, nil
 }
 
 func newCache() (persistence.CacheStore, error) {

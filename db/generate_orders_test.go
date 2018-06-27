@@ -2,11 +2,11 @@ package opbeansdb
 
 import (
 	"context"
-	"database/sql"
 	"math/rand"
 	"os"
 	"testing"
 
+	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
@@ -14,7 +14,7 @@ import (
 )
 
 func TestGenerateOrdersSQLite3(t *testing.T) {
-	db, err := sql.Open("sqlite3", ":memory:")
+	db, err := sqlx.Open("sqlite3", ":memory:")
 	require.NoError(t, err)
 	defer db.Close()
 
@@ -28,7 +28,7 @@ func TestGenerateOrdersPostgres(t *testing.T) {
 	if os.Getenv("PGHOST") == "" {
 		t.Skip("PGHOST not set")
 	}
-	db, err := sql.Open("postgres", "")
+	db, err := sqlx.Open("postgres", "")
 	require.NoError(t, err)
 	defer db.Close()
 
@@ -41,7 +41,7 @@ func TestGenerateOrdersPostgres(t *testing.T) {
 	assertGenerateOrders(t, db, "postgres")
 }
 
-func assertGenerateOrders(t *testing.T, db *sql.DB, driver string) {
+func assertGenerateOrders(t *testing.T, db *sqlx.DB, driver string) {
 	rng := rand.New(rand.NewSource(0))
 	err := GenerateOrders(db, driver, 100, rng)
 	if !assert.NoError(t, err) {
@@ -61,7 +61,7 @@ func assertGenerateOrders(t *testing.T, db *sql.DB, driver string) {
 	assert.Equal(t, 100, orderLinesCount)
 }
 
-func requireExecCommands(t *testing.T, db *sql.DB, filename string) {
+func requireExecCommands(t *testing.T, db *sqlx.DB, filename string) {
 	f, err := os.Open(filename)
 	require.NoError(t, err)
 	defer f.Close()
