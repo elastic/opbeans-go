@@ -2,10 +2,9 @@ package opbeansdb
 
 import (
 	"context"
-	"database/sql"
-	"fmt"
 	"math/rand"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
 
@@ -15,7 +14,7 @@ const (
 
 // GenerateOrders generates n orders, randomizing the
 // products and customers in use.
-func GenerateOrders(db *sql.DB, driver string, n int, rng *rand.Rand) error {
+func GenerateOrders(db *sqlx.DB, driver string, n int, rng *rand.Rand) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -34,25 +33,21 @@ func GenerateOrders(db *sql.DB, driver string, n int, rng *rand.Rand) error {
 		return err
 	}
 
-	arg0, arg1, arg2 := "$1", "$2", "$3"
 	returningID := "RETURNING id"
 	if driver == "sqlite3" {
-		arg0, arg1, arg2 = "?", "?", "?"
 		returningID = ""
 	}
 
-	insertOrderStmt, err := tx.PrepareContext(ctx, fmt.Sprintf(
-		"INSERT INTO orders (customer_id) VALUES (%s) %s",
-		arg0, returningID,
+	insertOrderStmt, err := tx.PrepareContext(ctx, db.Rebind(
+		"INSERT INTO orders (customer_id) VALUES (?) "+returningID,
 	))
 	if err != nil {
 		return errors.Wrap(err, "failed to prepare insert orders statement")
 	}
 	defer insertOrderStmt.Close()
 
-	insertOrderLineStmt, err := tx.PrepareContext(ctx, fmt.Sprintf(
-		"INSERT INTO order_lines (order_id, product_id, amount) VALUES(%s, %s, %s)",
-		arg0, arg1, arg2,
+	insertOrderLineStmt, err := tx.PrepareContext(ctx, db.Rebind(
+		"INSERT INTO order_lines (order_id, product_id, amount) VALUES(?, ?, ?)",
 	))
 	if err != nil {
 		return errors.Wrap(err, "failed to prepare insert order lines statement")
@@ -89,7 +84,7 @@ func GenerateOrders(db *sql.DB, driver string, n int, rng *rand.Rand) error {
 	return tx.Commit()
 }
 
-func getIDs(ctx context.Context, db *sql.DB, table string) ([]int, error) {
+func getIDs(ctx context.Context, db *sqlx.DB, table string) ([]int, error) {
 	var ids []int
 	rows, err := db.QueryContext(ctx, "SELECT id FROM "+table)
 	if err != nil {

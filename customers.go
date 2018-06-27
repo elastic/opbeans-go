@@ -2,8 +2,9 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type Customer struct {
@@ -17,15 +18,15 @@ type Customer struct {
 	Country     string `json:"country"`
 }
 
-func getCustomers(ctx context.Context, db *sql.DB) ([]Customer, error) {
+func getCustomers(ctx context.Context, db *sqlx.DB) ([]Customer, error) {
 	return queryCustomers(ctx, db, nil, nil, nil)
 }
 
-func getProductCustomers(ctx context.Context, db *sql.DB, productId, limit int) ([]Customer, error) {
+func getProductCustomers(ctx context.Context, db *sqlx.DB, productId, limit int) ([]Customer, error) {
 	return queryCustomers(ctx, db, nil, &productId, &limit)
 }
 
-func getCustomer(ctx context.Context, db *sql.DB, id int) (*Customer, error) {
+func getCustomer(ctx context.Context, db *sqlx.DB, id int) (*Customer, error) {
 	customers, err := queryCustomers(ctx, db, &id, nil, nil)
 	if err != nil || len(customers) == 0 {
 		return nil, err
@@ -33,7 +34,7 @@ func getCustomer(ctx context.Context, db *sql.DB, id int) (*Customer, error) {
 	return &customers[0], nil
 }
 
-func queryCustomers(ctx context.Context, db *sql.DB, id, productId, limit *int) ([]Customer, error) {
+func queryCustomers(ctx context.Context, db *sqlx.DB, id, productId, limit *int) ([]Customer, error) {
 	var args []interface{}
 	queryString := `
 SELECT
@@ -56,7 +57,7 @@ FROM customers
 		queryString += fmt.Sprintf("LIMIT %d\n", *limit)
 	}
 
-	rows, err := db.QueryContext(ctx, queryString, args...)
+	rows, err := db.QueryContext(ctx, db.Rebind(queryString), args...)
 	if err != nil {
 		return nil, err
 	}

@@ -2,16 +2,16 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"math/rand"
 	"time"
 
 	"github.com/elastic/opbeans-go/db"
+	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
-func initDatabase(db *sql.DB, driver string, logger *logrus.Logger) error {
+func initDatabase(db *sqlx.DB, driver string, logger *logrus.Logger) error {
 	if orders, err := getOrders(context.Background(), db); err == nil {
 		if len(orders) != 0 {
 			return nil

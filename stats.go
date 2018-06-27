@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"database/sql"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
 
@@ -18,7 +18,7 @@ type Stats struct {
 	} `json:"numbers"`
 }
 
-func getStats(ctx context.Context, db *sql.DB) (*Stats, error) {
+func getStats(ctx context.Context, db *sqlx.DB) (*Stats, error) {
 	var stats Stats
 	countParams := []struct {
 		table  string
