@@ -16,13 +16,13 @@ import (
 	"github.com/elastic/apm-agent-go"
 	"github.com/elastic/apm-agent-go/module/apmgin"
 	"github.com/elastic/apm-agent-go/module/apmsql"
-	"github.com/jmoiron/sqlx"
 
-	"github.com/garyburd/redigo/redis"
 	"github.com/gin-contrib/cache"
 	"github.com/gin-contrib/cache/persistence"
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
+	"github.com/gomodule/redigo/redis"
+	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
