@@ -2,12 +2,11 @@ FROM golang:1.10
 WORKDIR /go/src/github.com/elastic/opbeans-go
 COPY *.go /go/src/github.com/elastic/opbeans-go/
 COPY db /go/src/github.com/elastic/opbeans-go/db
-COPY vendor /go/src/github.com/elastic/opbeans-go/vendor
-RUN go build
+RUN go get
 
 FROM gcr.io/distroless/base
 COPY --from=opbeans/opbeans-frontend:latest /app/build /opbeans-frontend
-COPY --from=0 /go/src/github.com/elastic/opbeans-go/opbeans-go /
+COPY --from=0 /go/bin/opbeans-go /
 COPY --from=0 /go/src/github.com/elastic/opbeans-go/db /
 EXPOSE 8000
 

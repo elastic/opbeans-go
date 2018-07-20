@@ -1,12 +1,10 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"html/template"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -74,32 +72,26 @@ func Main(logger *logrus.Logger) error {
 	staticDirPath := filepath.Join(frontendBuildDir, "static")
 	imagesDirPath := filepath.Join(frontendBuildDir, "images")
 
-	indexContent, err := prepareIndex(indexFilePath)
-	if err != nil {
-		return err
-	}
-	handleIndex := func(c *gin.Context) {
-		c.Data(200, "text/html", indexContent)
-	}
-
 	r := newRouter(cache)
 	pprof.Register(r)
 	r.Static("/static", staticDirPath)
 	r.Static("/images", imagesDirPath)
 	r.StaticFile("/favicon.ico", faviconFilePath)
-	r.GET("/", handleIndex)
+	r.StaticFile("/", indexFilePath)
 	r.GET("/panic", handlePanic)
+	r.GET("/rum-config.js", handleRUMConfig)
 
 	indexPrefixes := []string{"/dashboard", "/products", "/customers", "/orders"}
 	for _, path := range indexPrefixes {
-		r.GET(path, handleIndex)
+		r.StaticFile(path, indexFilePath)
 	}
 	r.NoRoute(func(c *gin.Context) {
 		for _, prefix := range indexPrefixes {
 			if !strings.HasPrefix(c.Request.URL.Path, prefix+"/") {
 				continue
 			}
-			handleIndex(c)
+			c.Request.URL.Path = "/"
+			r.HandleContext(c)
 			return
 		}
 		c.Next()
@@ -109,39 +101,15 @@ func Main(logger *logrus.Logger) error {
 	return r.Run(*listenAddr)
 }
 
-// prepareIndex reads index.html, and injects a javascript
-// tag to configure the RUM agent.
-func prepareIndex(path string) ([]byte, error) {
-	content, err := ioutil.ReadFile(path)
-	if os.IsNotExist(err) {
-		return nil, errors.Errorf("%q not found: make sure you build frontend first", path)
-	} else if err != nil {
-		return nil, err
-	}
-
-	tag := []byte("<body>")
-	i := bytes.Index(content, tag)
-	if i == -1 {
-		return content, nil
-	}
-
+func handleRUMConfig(c *gin.Context) {
 	apmServerURL := os.Getenv("ELASTIC_APM_JS_SERVER_URL")
 	if apmServerURL == "" {
 		apmServerURL = "http://localhost:8200"
 	} else {
 		apmServerURL = template.JSEscapeString(apmServerURL)
 	}
-
-	var buf bytes.Buffer
-	buf.Write(content[:i+len(tag)])
-	buf.WriteString(fmt.Sprintf(`
-<script type="application/javascript">
-	window.ElasticApmJsBaseServiceName = 'opbeans-web'
-	window.ElasticApmJsBaseServerUrl = '%s'
-</script>
-`, apmServerURL))
-	buf.Write(content[i+len(tag):])
-	return buf.Bytes(), nil
+	content := fmt.Sprintf(`window.elasticApmJsBaseServerUrl = '%s';`, apmServerURL)
+	c.Data(200, "text/javascript", []byte(content))
 }
 
 func healthcheck(logger *logrus.Logger) error {
