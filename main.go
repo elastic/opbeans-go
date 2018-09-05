@@ -78,7 +78,7 @@ func Main(logger *logrus.Logger) error {
 	r.Static("/images", imagesDirPath)
 	r.StaticFile("/favicon.ico", faviconFilePath)
 	r.StaticFile("/", indexFilePath)
-	r.GET("/panic", handlePanic)
+	r.GET("/oopsie", handleOopsie)
 	r.GET("/rum-config.js", handleRUMConfig)
 
 	indexPrefixes := []string{"/dashboard", "/products", "/customers", "/orders"}
@@ -188,7 +188,7 @@ func newRouter(cacheStore persistence.CacheStore) *gin.Engine {
 	return r
 }
 
-func handlePanic(c *gin.Context) {
+func handleOopsie(c *gin.Context) {
 	switch c.Query("type") {
 	case "string":
 		panic("boom")
