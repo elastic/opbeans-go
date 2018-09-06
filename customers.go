@@ -8,7 +8,7 @@ import (
 )
 
 type Customer struct {
-	ID          string `json:"id"`
+	ID          int    `json:"id"`
 	FullName    string `json:"full_name"`
 	CompanyName string `json:"company_name"`
 	Email       string `json:"email"`

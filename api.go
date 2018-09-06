@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/csv"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -25,6 +27,8 @@ func addAPIHandlers(r *gin.RouterGroup, db *sqlx.DB, logger *logrus.Logger) {
 	r.GET("/customers/:id", h.getCustomerDetails)
 	r.GET("/orders", h.getOrders)
 	r.GET("/orders/:id", h.getOrderDetails)
+	r.POST("/orders", h.postOrder)
+	r.POST("/orders/csv", h.postOrderCSV)
 }
 
 type apiHandlers struct {
@@ -209,4 +213,99 @@ func (h apiHandlers) getOrderDetails(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, customer)
+}
+
+func (h apiHandlers) postOrder(c *gin.Context) {
+	type line struct {
+		ID     int `json:"id" binding:"required"`
+		Amount int `json:"amount" binding:"required"`
+	}
+	var order struct {
+		CustomerID int    `json:"customer_id" binding:"required"`
+		Lines      []line `json:"lines" binding:"required"`
+	}
+	if err := c.BindJSON(&order); err != nil {
+		return
+	}
+	lines := make([]ProductOrderLine, len(order.Lines))
+	for i, line := range order.Lines {
+		lines[i] = ProductOrderLine{
+			Product: Product{ID: line.ID},
+			Amount:  line.Amount,
+		}
+	}
+	h.postOrderCommon(c, order.CustomerID, lines)
+}
+
+func (h apiHandlers) postOrderCSV(c *gin.Context) {
+	customerID, err := strconv.Atoi(c.PostForm("customer"))
+	if err != nil {
+		err := errors.Wrap(err, "failed to parse customer ID")
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+	fileHeader, err := c.FormFile("file")
+	if err != nil {
+		err := errors.Wrap(err, "failed get CSV file")
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+	file, err := fileHeader.Open()
+	if err != nil {
+		err := errors.Wrap(err, "failed open CSV file")
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	defer file.Close()
+
+	var lines []ProductOrderLine
+	r := csv.NewReader(file)
+	for {
+		record, err := r.Read()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			err := errors.Wrap(err, "failed to parse CSV file")
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+		productID, err := strconv.Atoi(record[0])
+		if err != nil {
+			err := errors.Wrap(err, "failed to parse product ID")
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+		amount, err := strconv.Atoi(record[1])
+		if err != nil {
+			err := errors.Wrap(err, "failed to parse order amount")
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+		lines = append(lines, ProductOrderLine{
+			Product: Product{ID: productID},
+			Amount:  amount,
+		})
+	}
+	h.postOrderCommon(c, customerID, lines)
+}
+
+func (h apiHandlers) postOrderCommon(c *gin.Context, customerID int, lines []ProductOrderLine) {
+	customer, err := getCustomer(c.Request.Context(), h.db, customerID)
+	if err != nil {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+	orderID, err := createOrder(c.Request.Context(), h.db, customer, lines)
+	if err != nil {
+		err := errors.Wrap(err, "failed to create order")
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	// Set tags and custom context in line with opbeans-python.
+	if tx := elasticapm.TransactionFromContext(c.Request.Context()); tx != nil {
+		tx.Context.SetCustom("customer_name", customer.FullName)
+		tx.Context.SetCustom("customer_email", customer.Email)
+	}
+	c.JSON(http.StatusOK, gin.H{"id": orderID})
 }
