@@ -23,6 +23,7 @@ func addAPIHandlers(r *gin.RouterGroup, db *sqlx.DB, logger *logrus.Logger) {
 	r.GET("/products/:id", h.getProductDetails)
 	r.GET("/products/:id/customers", h.getProductCustomers)
 	r.GET("/types", h.getProductTypes)
+	r.GET("/types/:id", h.getProductTypeDetails)
 	r.GET("/customers", h.getCustomers)
 	r.GET("/customers/:id", h.getCustomerDetails)
 	r.GET("/orders", h.getOrders)
@@ -157,6 +158,26 @@ func (h apiHandlers) getProductTypes(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, productTypes)
+}
+
+func (h apiHandlers) getProductTypeDetails(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		err := errors.Wrap(err, "failed to parse product type ID")
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	productType, err := getProductType(c.Request.Context(), h.db, id)
+	if err != nil {
+		err := errors.Wrap(err, "failed to get product type details")
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	if productType == nil {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+	c.JSON(http.StatusOK, productType)
 }
 
 func (h apiHandlers) getCustomers(c *gin.Context) {
