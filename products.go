@@ -98,9 +98,28 @@ FROM products JOIN product_types ON type_id=product_types.id
 }
 
 func getProductTypes(ctx context.Context, db *sqlx.DB) ([]ProductType, error) {
-	rows, err := db.QueryContext(ctx, "SELECT id, name FROM product_types")
-	if err != nil {
+	return queryProductTypes(ctx, db, nil)
+}
+
+func getProductType(ctx context.Context, db *sqlx.DB, id int) (*ProductType, error) {
+	productTypes, err := queryProductTypes(ctx, db, &id)
+	if err != nil || len(productTypes) == 0 {
 		return nil, err
+	}
+	return &productTypes[0], nil
+}
+
+func queryProductTypes(ctx context.Context, db *sqlx.DB, id *int) ([]ProductType, error) {
+	var args []interface{}
+	queryString := "SELECT id, name FROM product_types"
+	if id != nil {
+		queryString += " WHERE id=?"
+		args = append(args, *id)
+	}
+
+	rows, err := db.QueryContext(ctx, db.Rebind(queryString), args...)
+	if err != nil {
+		return nil, errors.Wrap(err, "querying product types")
 	}
 	defer rows.Close()
 

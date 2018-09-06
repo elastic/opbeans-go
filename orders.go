@@ -90,3 +90,53 @@ WHERE order_lines.order_id=?`)
 	order.Lines = lines
 	return &order, rows.Err()
 }
+
+func createOrder(ctx context.Context, db *sqlx.DB, customer *Customer, lines []ProductOrderLine) (int, error) {
+	tx, err := db.BeginTxx(ctx, nil)
+	if err != nil {
+		return -1, err
+	}
+	defer tx.Rollback()
+
+	driver := db.DriverName()
+	returningID := "RETURNING id"
+	if driver == "sqlite3" {
+		returningID = ""
+	}
+	insertOrderStmt := db.Rebind("INSERT INTO orders (customer_id) VALUES (?) " + returningID)
+
+	insertOrderLineStmt, err := tx.PrepareContext(ctx, db.Rebind(
+		"INSERT INTO order_lines (order_id, product_id, amount) VALUES(?, ?, ?)",
+	))
+	if err != nil {
+		return -1, errors.Wrap(err, "failed to prepare insert order lines statement")
+	}
+	defer insertOrderLineStmt.Close()
+
+	var orderID int
+	if returningID == "" {
+		result, err := tx.ExecContext(ctx, insertOrderStmt, customer.ID)
+		if err != nil {
+			return -1, err
+		}
+		rowID, err := result.LastInsertId()
+		if err != nil {
+			return -1, err
+		}
+		orderID = int(rowID)
+	} else {
+		err := tx.QueryRowContext(ctx, insertOrderStmt, customer.ID).Scan(&orderID)
+		if err != nil {
+			return -1, err
+		}
+	}
+	for _, line := range lines {
+		if _, err := insertOrderLineStmt.ExecContext(ctx, orderID, line.Product.ID, line.Amount); err != nil {
+			return -1, err
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		return -1, err
+	}
+	return orderID, nil
+}
