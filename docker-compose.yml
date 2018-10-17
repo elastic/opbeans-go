@@ -13,6 +13,12 @@ services:
     environment:
       - ELASTIC_APM_SERVER_URL=${ELASTIC_APM_SERVER_URL:-http://apm-server:8200}
       - ELASTIC_APM_JS_SERVER_URL=${ELASTIC_APM_JS_SERVER_URL:-http://localhost:8200}
+      - PGHOST=postgres
+      - PGUSER=postgres
+      - PGPASSWORD=hunter2
+      - PGDATABASE=opbeans
+      - PGSSLMODE=disable
+      - ELASTIC_APM_DEBUG=log=true
     depends_on:
       redis:
         condition: service_healthy
@@ -20,13 +26,13 @@ services:
         condition: service_healthy
       apm-server:
         condition: service_healthy
-    volumes:
-      - opbeansdb:/var/lib/opbeans-go
+      postgres:
+        condition: service_started
     command:
       - "/opbeans-go"
       - "-listen=:${OPBEANS_GO_PORT:-8000}"
       - "-frontend=/opbeans-frontend"
-      - "-db=sqlite3:/var/lib/opbeans-go/opbeans.go:"
+      - "-db=postgres:"
       - "-cache=redis://redis:6379"
 
   apm-server:
@@ -126,8 +132,20 @@ services:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
 
+  postgres:
+    image: postgres:latest
+    environment:
+      - POSTGRES_PASSWORD=hunter2
+      - POSTGRES_DB=opbeans
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+
 volumes:
   esdata:
     driver: local
   opbeansdb:
+    driver: local
+  pgdata:
     driver: local
