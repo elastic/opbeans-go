@@ -7,13 +7,13 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/elastic/apm-agent-go"
 	"github.com/gin-contrib/cache"
 	"github.com/gin-contrib/cache/persistence"
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"go.elastic.co/apm"
 )
 
 func addAPIHandlers(r *gin.RouterGroup, db *sqlx.DB, logger *logrus.Logger) {
@@ -48,13 +48,13 @@ func (h apiHandlers) getStats(c *gin.Context) {
 	case nil:
 		h.log.Debug("serving stats from cache")
 		c.JSON(http.StatusOK, stats)
-		if tx := elasticapm.TransactionFromContext(c.Request.Context()); tx != nil {
+		if tx := apm.TransactionFromContext(c.Request.Context()); tx != nil {
 			tx.Context.SetTag("served_from_cache", "true")
 		}
 		return
 	case persistence.ErrCacheMiss:
 		// fetch and cache below
-		if tx := elasticapm.TransactionFromContext(c.Request.Context()); tx != nil {
+		if tx := apm.TransactionFromContext(c.Request.Context()); tx != nil {
 			tx.Context.SetTag("served_from_cache", "false")
 		}
 		break
@@ -324,7 +324,7 @@ func (h apiHandlers) postOrderCommon(c *gin.Context, customerID int, lines []Pro
 	}
 
 	// Set tags and custom context in line with opbeans-python.
-	if tx := elasticapm.TransactionFromContext(c.Request.Context()); tx != nil {
+	if tx := apm.TransactionFromContext(c.Request.Context()); tx != nil {
 		tx.Context.SetCustom("customer_name", customer.FullName)
 		tx.Context.SetCustom("customer_email", customer.Email)
 	}

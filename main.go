@@ -11,10 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/elastic/apm-agent-go"
-	"github.com/elastic/apm-agent-go/module/apmgin"
-	"github.com/elastic/apm-agent-go/module/apmsql"
-
 	"github.com/gin-contrib/cache"
 	"github.com/gin-contrib/cache/persistence"
 	"github.com/gin-contrib/pprof"
@@ -23,6 +19,9 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"go.elastic.co/apm"
+	"go.elastic.co/apm/module/apmgin"
+	"go.elastic.co/apm/module/apmsql"
 )
 
 const (
@@ -48,7 +47,7 @@ func main() {
 		return
 	}
 
-	elasticapm.DefaultTracer.SetLogger(logger)
+	apm.DefaultTracer.SetLogger(logger)
 	if err := Main(logger); err != nil {
 		logger.Fatal(err)
 	}
