@@ -1,0 +1,23 @@
+= APM Go Agent Reference (Beta)
+
+ifdef::env-github[]
+* link:./introduction.asciidoc[Introduction]
+* link:./supported-tech.asciidoc[Supported Technologies]
+* link:./instrumenting.asciidoc[Instrumenting]
+* link:./configuration.asciidoc[Configuration]
+* link:./api.asciidoc[API documentation]
+* link:./opentracing.asciidoc[OpenTracing API]
+* link:./contributing.asciidoc[Contributing]
+endif::[]
+
+ifndef::env-github[]
+:branch: current
+include::{asciidoc-dir}/../../shared/attributes.asciidoc[]
+include::./introduction.asciidoc[Introduction]
+include::./supported-tech.asciidoc[Supported Technologies]
+include::./instrumenting.asciidoc[Instrumenting]
+include::./configuration.asciidoc[Configuration]
+include::./api.asciidoc[API documentation]
+include::./opentracing.asciidoc[OpenTracing API]
+include::./contributing.asciidoc[Contributing]
+endif::[]

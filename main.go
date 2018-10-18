@@ -5,15 +5,16 @@ import (
 	"flag"
 	"fmt"
 	"html/template"
+	"math/rand"
+	"net"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
-
-	"github.com/elastic/apm-agent-go"
-	"github.com/elastic/apm-agent-go/module/apmgin"
-	"github.com/elastic/apm-agent-go/module/apmsql"
 
 	"github.com/gin-contrib/cache"
 	"github.com/gin-contrib/cache/persistence"
@@ -23,6 +24,10 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"go.elastic.co/apm"
+	"go.elastic.co/apm/module/apmgin"
+	"go.elastic.co/apm/module/apmhttp"
+	"go.elastic.co/apm/module/apmsql"
 )
 
 const (
@@ -31,6 +36,7 @@ const (
 
 var (
 	listenAddr      = flag.String("listen", ":8000", "Address on which to listen for HTTP requests")
+	backendAddrs    = flag.String("backend", "", "Comma-separated list of addresses of opbeans services to proxy API requests to ($OPBEANS_SERVICES)")
 	database        = flag.String("db", "sqlite3::memory:", "Database URL")
 	frontendDir     = flag.String("frontend", "frontend/build", "Frontend assets dir")
 	cacheURL        = flag.String("cache", "inmem", "Cache URL ("+cacheURLFormat+")")
@@ -48,31 +54,63 @@ func main() {
 		return
 	}
 
-	elasticapm.DefaultTracer.SetLogger(logger)
+	apm.DefaultTracer.SetLogger(logger)
+
+	// Instrument the default HTTP transport, so that outgoing
+	// (reverse-proxy) requests are reported as spans.
+	http.DefaultTransport = apmhttp.WrapRoundTripper(http.DefaultTransport)
+
 	if err := Main(logger); err != nil {
 		logger.Fatal(err)
 	}
 }
 
 func Main(logger *logrus.Logger) error {
-	db, err := newDatabase(logger)
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
-	cache, err := newCache()
-	if err != nil {
-		return err
-	}
-
 	frontendBuildDir := filepath.FromSlash(*frontendDir)
 	indexFilePath := filepath.Join(frontendBuildDir, "index.html")
 	faviconFilePath := filepath.Join(frontendBuildDir, "favicon.ico")
 	staticDirPath := filepath.Join(frontendBuildDir, "static")
 	imagesDirPath := filepath.Join(frontendBuildDir, "images")
 
-	r := newRouter(cache)
+	var backendURLs []*url.URL
+	if *backendAddrs == "" {
+		*backendAddrs = os.Getenv("OPBEANS_SERVICES")
+	}
+	for _, field := range strings.Fields(*backendAddrs) {
+		if u, err := url.Parse(field); err == nil && u.Scheme != "" {
+			backendURLs = append(backendURLs, u)
+			continue
+		}
+		// Not an absolute URL, so should be a host or host/port pair.
+		hostport := field
+		if _, _, err := net.SplitHostPort(hostport); err != nil {
+			// A bare host was specified; assume the same port
+			// that we're listening on.
+			_, port, err := net.SplitHostPort(*listenAddr)
+			if err != nil {
+				port = "3000"
+			}
+			hostport = net.JoinHostPort(hostport, port)
+		}
+		backendURLs = append(backendURLs, &url.URL{Scheme: "http", Host: hostport})
+	}
+
+	db, err := newDatabase(logger)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	cacheStore, err := newCache()
+	if err != nil {
+		return err
+	}
+
+	r := gin.New()
+	r.Use(gin.Logger())
+	r.Use(apmgin.Middleware(r))
+	r.Use(cache.Cache(&cacheStore))
+
 	pprof.Register(r)
 	r.Static("/static", staticDirPath)
 	r.Static("/images", imagesDirPath)
@@ -80,24 +118,50 @@ func Main(logger *logrus.Logger) error {
 	r.StaticFile("/", indexFilePath)
 	r.GET("/oopsie", handleOopsie)
 	r.GET("/rum-config.js", handleRUMConfig)
-
-	indexPrefixes := []string{"/dashboard", "/products", "/customers", "/orders"}
-	for _, path := range indexPrefixes {
-		r.StaticFile(path, indexFilePath)
-	}
-	r.NoRoute(func(c *gin.Context) {
-		for _, prefix := range indexPrefixes {
-			if !strings.HasPrefix(c.Request.URL.Path, prefix+"/") {
-				continue
+	r.Use(func(c *gin.Context) {
+		// Paths used by the frontend for state.
+		for _, prefix := range []string{
+			"/dashboard",
+			"/products",
+			"/customers",
+			"/orders",
+		} {
+			if strings.HasPrefix(c.Request.URL.Path, prefix) {
+				c.Request.URL.Path = "/"
+				r.HandleContext(c)
+				return
 			}
-			c.Request.URL.Path = "/"
-			r.HandleContext(c)
-			return
 		}
 		c.Next()
 	})
 
-	addAPIHandlers(r.Group("/api"), db, logger)
+	// Create API routes. We install middleware for /api which probabilistically
+	// proxies these requests to another opbeans service to demonstrate distributed
+	// tracing, and test agent compatibility.
+	proxyProbability := 0.5
+	if value := os.Getenv("OPBEANS_DT_PROBABILITY"); value != "" {
+		f, err := strconv.ParseFloat(value, 64)
+		if err != nil {
+			return errors.Wrapf(err, "failed to parse OPBEANS_DT_PROBABILITY")
+		}
+		if f < 0.0 || f > 1.0 {
+			return errors.Errorf("invalid OPBEANS_DT_PROBABILITY value %s: out of range [0,1.0]", value)
+		}
+		proxyProbability = f
+	}
+	rand.Seed(time.Now().UnixNano())
+	maybeProxy := func(c *gin.Context) {
+		if len(backendURLs) > 0 && rand.Float64() < proxyProbability {
+			u := backendURLs[rand.Intn(len(backendURLs))]
+			logger.Infof("proxying API request to %s", u)
+			httputil.NewSingleHostReverseProxy(u).ServeHTTP(c.Writer, c.Request)
+			return
+		}
+		c.Next()
+	}
+	apiGroup := r.Group("/api", maybeProxy)
+	addAPIHandlers(apiGroup, db, logger)
+
 	return r.Run(*listenAddr)
 }
 
@@ -108,7 +172,7 @@ func handleRUMConfig(c *gin.Context) {
 	} else {
 		apmServerURL = template.JSEscapeString(apmServerURL)
 	}
-	content := fmt.Sprintf(`window.elasticApmJsBaseServerUrl = '%s';`, apmServerURL)
+	content := fmt.Sprintf("window.elasticApmJsBaseServerUrl = '%s';\n", apmServerURL)
 	c.Data(200, "text/javascript", []byte(content))
 }
 
@@ -178,14 +242,6 @@ func newRedisPool(url string) *redis.Pool {
 			return nil
 		},
 	}
-}
-
-func newRouter(cacheStore persistence.CacheStore) *gin.Engine {
-	r := gin.New()
-	r.Use(gin.Logger())
-	r.Use(apmgin.Middleware(r))
-	r.Use(cache.Cache(&cacheStore))
-	return r
 }
 
 func handleOopsie(c *gin.Context) {

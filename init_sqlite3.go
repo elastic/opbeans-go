@@ -3,5 +3,5 @@
 package main
 
 import (
-	_ "github.com/elastic/apm-agent-go/module/apmsql/sqlite3"
+	_ "go.elastic.co/apm/module/apmsql/sqlite3"
 )
