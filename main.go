@@ -76,23 +76,26 @@ func Main(logger *logrus.Logger) error {
 	if *backendAddrs == "" {
 		*backendAddrs = os.Getenv("OPBEANS_SERVICES")
 	}
-	for _, field := range strings.Fields(*backendAddrs) {
-		if u, err := url.Parse(field); err == nil && u.Scheme != "" {
-			backendURLs = append(backendURLs, u)
-			continue
-		}
-		// Not an absolute URL, so should be a host or host/port pair.
-		hostport := field
-		if _, _, err := net.SplitHostPort(hostport); err != nil {
-			// A bare host was specified; assume the same port
-			// that we're listening on.
-			_, port, err := net.SplitHostPort(*listenAddr)
-			if err != nil {
-				port = "3000"
+	if *backendAddrs != "" {
+		for _, field := range strings.Split(*backendAddrs, ",") {
+			field = strings.TrimSpace(field)
+			if u, err := url.Parse(field); err == nil && u.Scheme != "" {
+				backendURLs = append(backendURLs, u)
+				continue
 			}
-			hostport = net.JoinHostPort(hostport, port)
+			// Not an absolute URL, so should be a host or host/port pair.
+			hostport := field
+			if _, _, err := net.SplitHostPort(hostport); err != nil {
+				// A bare host was specified; assume the same port
+				// that we're listening on.
+				_, port, err := net.SplitHostPort(*listenAddr)
+				if err != nil {
+					port = "3000"
+				}
+				hostport = net.JoinHostPort(hostport, port)
+			}
+			backendURLs = append(backendURLs, &url.URL{Scheme: "http", Host: hostport})
 		}
-		backendURLs = append(backendURLs, &url.URL{Scheme: "http", Host: hostport})
 	}
 
 	db, err := newDatabase(logger)
