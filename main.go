@@ -158,6 +158,7 @@ func Main(logger *logrus.Logger) error {
 			u := backendURLs[rand.Intn(len(backendURLs))]
 			logger.Infof("proxying API request to %s", u)
 			httputil.NewSingleHostReverseProxy(u).ServeHTTP(c.Writer, c.Request)
+			c.Abort()
 			return
 		}
 		c.Next()
