@@ -1,10 +1,10 @@
 package apm
 
 import (
-	"go.elastic.co/apm/internal/fastjson"
 	"go.elastic.co/apm/internal/ringbuffer"
 	"go.elastic.co/apm/model"
 	"go.elastic.co/apm/stacktrace"
+	"go.elastic.co/fastjson"
 )
 
 const (
@@ -78,9 +78,9 @@ func (w *modelWriter) buildModelTransaction(out *model.Transaction, tx *Transact
 	out.TraceID = model.TraceID(tx.traceContext.Trace)
 	out.ParentID = model.SpanID(tx.parentSpan)
 
-	out.Name = truncateKeyword(tx.Name)
-	out.Type = truncateKeyword(tx.Type)
-	out.Result = truncateKeyword(tx.Result)
+	out.Name = truncateString(tx.Name)
+	out.Type = truncateString(tx.Type)
+	out.Result = truncateString(tx.Result)
 	out.Timestamp = model.Time(tx.timestamp.UTC())
 	out.Duration = tx.Duration.Seconds() * 1000
 	out.SpanCount.Started = tx.spansCreated
@@ -91,8 +91,13 @@ func (w *modelWriter) buildModelTransaction(out *model.Transaction, tx *Transact
 	}
 
 	out.Context = tx.Context.build()
-	if len(w.cfg.sanitizedFieldNames) != 0 && out.Context != nil && out.Context.Request != nil {
-		sanitizeRequest(out.Context.Request, w.cfg.sanitizedFieldNames)
+	if len(w.cfg.sanitizedFieldNames) != 0 && out.Context != nil {
+		if out.Context.Request != nil {
+			sanitizeRequest(out.Context.Request, w.cfg.sanitizedFieldNames)
+		}
+		if out.Context.Response != nil {
+			sanitizeResponse(out.Context.Response, w.cfg.sanitizedFieldNames)
+		}
 	}
 }
 
@@ -103,8 +108,8 @@ func (w *modelWriter) buildModelSpan(out *model.Span, span *Span) {
 	out.ParentID = model.SpanID(span.parentID)
 	out.TransactionID = model.SpanID(span.transactionID)
 
-	out.Name = truncateKeyword(span.Name)
-	out.Type = truncateKeyword(span.Type)
+	out.Name = truncateString(span.Name)
+	out.Type = truncateString(span.Type)
 	out.Timestamp = model.Time(span.timestamp.UTC())
 	out.Duration = span.Duration.Seconds() * 1000
 	out.Context = span.Context.build()

@@ -84,12 +84,17 @@ func (m *middleware) handle(c *gin.Context) {
 	body := m.tracer.CaptureHTTPRequestBody(c.Request)
 	defer func() {
 		if v := recover(); v != nil {
-			c.AbortWithStatus(http.StatusInternalServerError)
+			if !c.Writer.Written() {
+				c.AbortWithStatus(http.StatusInternalServerError)
+			} else {
+				c.Abort()
+			}
 			e := m.tracer.Recovered(v)
 			e.SetTransaction(tx)
 			setContext(&e.Context, c, body)
 			e.Send()
 		}
+		c.Writer.WriteHeaderNow()
 		tx.Result = apmhttp.StatusCodeResult(c.Writer.Status())
 
 		if tx.Sampled() {
@@ -111,10 +116,8 @@ func setContext(ctx *apm.Context, c *gin.Context, body *apm.BodyCapturer) {
 	ctx.SetFramework("gin", gin.Version)
 	ctx.SetHTTPRequest(c.Request)
 	ctx.SetHTTPRequestBody(body)
-	if c.Writer.Written() {
-		ctx.SetHTTPStatusCode(c.Writer.Status())
-		ctx.SetHTTPResponseHeaders(c.Writer.Header())
-	}
+	ctx.SetHTTPStatusCode(c.Writer.Status())
+	ctx.SetHTTPResponseHeaders(c.Writer.Header())
 }
 
 // Option sets options for tracing.

@@ -2,7 +2,6 @@ package model_test
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"net/url"
 	"strings"
@@ -12,8 +11,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"go.elastic.co/apm/internal/fastjson"
 	"go.elastic.co/apm/model"
+	"go.elastic.co/fastjson"
 )
 
 func TestMarshalTransaction(t *testing.T) {
@@ -50,8 +49,8 @@ func TestMarshalTransaction(t *testing.T) {
 				},
 				"method": "GET",
 				"headers": map[string]interface{}{
-					"user-agent": "Mosaic/0.2 (Windows 3.1)",
-					"cookie":     "monster=yumyum; random=junk",
+					"User-Agent": "Mosaic/0.2 (Windows 3.1)",
+					"Cookie":     "monster=yumyum; random=junk",
 				},
 				"body":         "ahoj",
 				"http_version": "1.1",
@@ -67,17 +66,11 @@ func TestMarshalTransaction(t *testing.T) {
 			"response": map[string]interface{}{
 				"status_code": float64(418),
 				"headers": map[string]interface{}{
-					"content-type": "text/html",
+					"Content-Type": "text/html",
 				},
 			},
 			"user": map[string]interface{}{
 				"username": "wanda",
-			},
-			"custom": map[string]interface{}{
-				"foo": map[string]interface{}{
-					"bar": "baz",
-					"qux": float64(123),
-				},
 			},
 			"tags": map[string]interface{}{
 				"tag": "urit",
@@ -327,82 +320,22 @@ func TestMarshalStacktraceFrame(t *testing.T) {
 	)
 }
 
-func TestMarshalContextCustomErrors(t *testing.T) {
-	context := model.Context{
-		Custom: model.IfaceMap{{
-			Key: "panic_value",
-			Value: marshalFunc(func() ([]byte, error) {
-				panic("aiee")
-			}),
-		}},
-	}
-	var w fastjson.Writer
-	context.MarshalFastJSON(&w)
-	assert.Equal(t,
-		`{"custom":{"panic_value":{"__PANIC__":"panic calling MarshalJSON for type model_test.marshalFunc: aiee"}}}`,
-		string(w.Bytes()),
-	)
-
-	context.Custom = model.IfaceMap{{
-		Key: "error_value",
-		Value: marshalFunc(func() ([]byte, error) {
-			return nil, errors.New("nope")
-		}),
-	}}
-	w.Reset()
-	context.MarshalFastJSON(&w)
-	assert.Equal(t,
-		`{"custom":{"error_value":{"__ERROR__":"json: error calling MarshalJSON for type model_test.marshalFunc: nope"}}}`,
-		string(w.Bytes()),
-	)
-}
-
-type marshalFunc func() ([]byte, error)
-
-func (f marshalFunc) MarshalJSON() ([]byte, error) {
-	return f()
-}
-
-func TestMarshalCustomInvalidJSON(t *testing.T) {
-	context := model.Context{
-		Custom: model.IfaceMap{{
-			Key: "k1",
-			Value: appenderFunc(func(in []byte) []byte {
-				return append(in, "123"...)
-			}),
-		}, {
-			Key: "k2",
-			Value: appenderFunc(func(in []byte) []byte {
-				return append(in, `"value"`...)
-			}),
-		}},
-	}
-	var w fastjson.Writer
-	context.MarshalFastJSON(&w)
-	assert.Equal(t, `{"custom":{"k1":123,"k2":"value"}}`, string(w.Bytes()))
-}
-
-type appenderFunc func([]byte) []byte
-
-func (f appenderFunc) AppendJSON(in []byte) []byte {
-	return f(in)
-}
-
 func TestMarshalResponse(t *testing.T) {
 	finished := true
 	headersSent := true
 	response := model.Response{
 		Finished: &finished,
-		Headers: &model.ResponseHeaders{
-			ContentType: "text/plain",
-		},
+		Headers: model.Headers{{
+			Key:    "Content-Type",
+			Values: []string{"text/plain"},
+		}},
 		HeadersSent: &headersSent,
 		StatusCode:  200,
 	}
 	var w fastjson.Writer
 	response.MarshalFastJSON(&w)
 	assert.Equal(t,
-		`{"finished":true,"headers":{"content-type":"text/plain"},"headers_sent":true,"status_code":200}`,
+		`{"finished":true,"headers":{"Content-Type":"text/plain"},"headers_sent":true,"status_code":200}`,
 		string(w.Bytes()),
 	)
 }
@@ -507,10 +440,11 @@ func fakeTransaction() model.Transaction {
 					Hash:     "qux",
 				},
 				Method: "GET",
-				Headers: &model.RequestHeaders{
-					UserAgent: "Mosaic/0.2 (Windows 3.1)",
-					Cookie:    "monster=yumyum; random=junk",
-				},
+				Headers: model.Headers{{
+					Key: "Cookie", Values: []string{"monster=yumyum; random=junk"},
+				}, {
+					Key: "User-Agent", Values: []string{"Mosaic/0.2 (Windows 3.1)"},
+				}},
 				Body: &model.RequestBody{
 					Raw: "ahoj",
 				},
@@ -526,23 +460,16 @@ func fakeTransaction() model.Transaction {
 			},
 			Response: &model.Response{
 				StatusCode: 418,
-				Headers: &model.ResponseHeaders{
-					ContentType: "text/html",
-				},
+				Headers: model.Headers{{
+					Key: "Content-Type", Values: []string{"text/html"},
+				}},
 			},
 			User: &model.User{
 				Username: "wanda",
 			},
-			Custom: model.IfaceMap{{
-				Key: "foo",
-				Value: map[string]interface{}{
-					"bar": "baz",
-					"qux": float64(123),
-				},
+			Tags: model.StringMap{{
+				Key: "tag", Value: "urit",
 			}},
-			Tags: map[string]string{
-				"tag": "urit",
-			},
 			Service: &model.Service{
 				Framework: &model.Framework{
 					Name:    "framework-name",

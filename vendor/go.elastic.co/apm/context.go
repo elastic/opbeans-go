@@ -3,7 +3,6 @@ package apm
 import (
 	"fmt"
 	"net/http"
-	"strings"
 
 	"go.elastic.co/apm/internal/apmhttputil"
 	"go.elastic.co/apm/model"
@@ -14,10 +13,8 @@ type Context struct {
 	model            model.Context
 	request          model.Request
 	requestBody      model.RequestBody
-	requestHeaders   model.RequestHeaders
 	requestSocket    model.RequestSocket
 	response         model.Response
-	responseHeaders  model.ResponseHeaders
 	user             model.User
 	service          model.Service
 	serviceFramework model.Framework
@@ -30,7 +27,6 @@ func (c *Context) build() *model.Context {
 	case c.model.Response != nil:
 	case c.model.User != nil:
 	case c.model.Service != nil:
-	case len(c.model.Custom) != 0:
 	case len(c.model.Tags) != 0:
 	default:
 		return nil
@@ -39,29 +35,18 @@ func (c *Context) build() *model.Context {
 }
 
 func (c *Context) reset() {
-	modelContext := model.Context{
-		// TODO(axw) reuse space for tags
-		Custom: c.model.Custom[:0],
-	}
 	*c = Context{
-		model:           modelContext,
+		model: model.Context{
+			Tags: c.model.Tags[:0],
+		},
 		captureBodyMask: c.captureBodyMask,
+		request: model.Request{
+			Headers: c.request.Headers[:0],
+		},
+		response: model.Response{
+			Headers: c.response.Headers[:0],
+		},
 	}
-}
-
-// SetCustom sets a custom context key/value pair. If the key is invalid
-// (contains '.', '*', or '"'), the call is a no-op. The value must be
-// JSON-encodable.
-//
-// If value implements interface{AppendJSON([]byte) []byte}, that will be
-// used to encode the value. Otherwise, value will be encoded using
-// json.Marshal. As a special case, values of type map[string]interface{}
-// will be traversed and values encoded according to the same rules.
-func (c *Context) SetCustom(key string, value interface{}) {
-	if !validTagKey(key) {
-		return
-	}
-	c.model.Custom.Set(key, value)
 }
 
 // SetTag sets a tag in the context. If the key is invalid
@@ -70,12 +55,13 @@ func (c *Context) SetTag(key, value string) {
 	if !validTagKey(key) {
 		return
 	}
-	value = truncateKeyword(value)
-	if c.model.Tags == nil {
-		c.model.Tags = map[string]string{key: value}
-	} else {
-		c.model.Tags[key] = value
-	}
+	value = truncateString(value)
+	// Note that we do not attempt to de-duplicate the keys.
+	// This is OK, since json.Unmarshal will always take the
+	// final instance.
+	c.model.Tags = append(c.model.Tags, model.StringMapItem{
+		Key: key, Value: value,
+	})
 }
 
 // SetFramework sets the framework name and version in the context.
@@ -94,8 +80,8 @@ func (c *Context) SetFramework(name, version string) {
 		version = "unspecified"
 	}
 	c.serviceFramework = model.Framework{
-		Name:    truncateKeyword(name),
-		Version: truncateKeyword(version),
+		Name:    truncateString(name),
+		Version: truncateString(version),
 	}
 	c.service.Framework = &c.serviceFramework
 	c.model.Service = &c.service
@@ -134,19 +120,20 @@ func (c *Context) SetHTTPRequest(req *http.Request) {
 	c.request = model.Request{
 		Body:        c.request.Body,
 		URL:         apmhttputil.RequestURL(req, forwarded),
-		Method:      truncateKeyword(req.Method),
+		Method:      truncateString(req.Method),
 		HTTPVersion: httpVersion,
 		Cookies:     req.Cookies(),
 	}
 	c.model.Request = &c.request
 
-	c.requestHeaders = model.RequestHeaders{
-		ContentType: req.Header.Get("Content-Type"),
-		Cookie:      truncateText(strings.Join(req.Header["Cookie"], ";")),
-		UserAgent:   req.UserAgent(),
-	}
-	if c.requestHeaders != (model.RequestHeaders{}) {
-		c.request.Headers = &c.requestHeaders
+	for k, values := range req.Header {
+		if k == "Cookie" {
+			// We capture cookies in the request structure.
+			continue
+		}
+		c.request.Headers = append(c.request.Headers, model.Header{
+			Key: k, Values: values,
+		})
 	}
 
 	c.requestSocket = model.RequestSocket{
@@ -161,7 +148,7 @@ func (c *Context) SetHTTPRequest(req *http.Request) {
 	if !ok && req.URL.User != nil {
 		username = req.URL.User.Username()
 	}
-	c.user.Username = truncateKeyword(username)
+	c.user.Username = truncateString(username)
 	if c.user.Username != "" {
 		c.model.User = &c.user
 	}
@@ -180,9 +167,12 @@ func (c *Context) SetHTTPRequestBody(bc *BodyCapturer) {
 
 // SetHTTPResponseHeaders sets the HTTP response headers in the context.
 func (c *Context) SetHTTPResponseHeaders(h http.Header) {
-	c.responseHeaders.ContentType = h.Get("Content-Type")
-	if c.responseHeaders.ContentType != "" {
-		c.response.Headers = &c.responseHeaders
+	for k, values := range h {
+		c.response.Headers = append(c.response.Headers, model.Header{
+			Key: k, Values: values,
+		})
+	}
+	if len(c.response.Headers) != 0 {
 		c.model.Response = &c.response
 	}
 }
@@ -195,7 +185,7 @@ func (c *Context) SetHTTPStatusCode(statusCode int) {
 
 // SetUserID sets the ID of the authenticated user.
 func (c *Context) SetUserID(id string) {
-	c.user.ID = truncateKeyword(id)
+	c.user.ID = truncateString(id)
 	if c.user.ID != "" {
 		c.model.User = &c.user
 	}
@@ -203,7 +193,7 @@ func (c *Context) SetUserID(id string) {
 
 // SetUserEmail sets the email for the authenticated user.
 func (c *Context) SetUserEmail(email string) {
-	c.user.Email = truncateKeyword(email)
+	c.user.Email = truncateString(email)
 	if c.user.Email != "" {
 		c.model.User = &c.user
 	}
@@ -211,7 +201,7 @@ func (c *Context) SetUserEmail(email string) {
 
 // SetUsername sets the username of the authenticated user.
 func (c *Context) SetUsername(username string) {
-	c.user.Username = truncateKeyword(username)
+	c.user.Username = truncateString(username)
 	if c.user.Username != "" {
 		c.model.User = &c.user
 	}
