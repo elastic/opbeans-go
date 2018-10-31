@@ -13,13 +13,33 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 	"golang.org/x/net/http2"
 
 	"go.elastic.co/apm"
+	"go.elastic.co/apm/apmtest"
 	"go.elastic.co/apm/model"
 	"go.elastic.co/apm/module/apmhttp"
 	"go.elastic.co/apm/transport/transporttest"
 )
+
+func TestHandlerHTTPSuite(t *testing.T) {
+	tracer, recorder := transporttest.NewRecorderTracer()
+	mux := http.NewServeMux()
+	mux.HandleFunc("/implicit_write", func(w http.ResponseWriter, req *http.Request) {})
+	mux.HandleFunc("/panic_before_write", func(w http.ResponseWriter, req *http.Request) {
+		panic("boom")
+	})
+	mux.HandleFunc("/panic_after_write", func(w http.ResponseWriter, req *http.Request) {
+		w.Write([]byte("hello, world"))
+		panic("boom")
+	})
+	suite.Run(t, &apmtest.HTTPTestSuite{
+		Handler:  apmhttp.Wrap(mux, apmhttp.WithTracer(tracer)),
+		Tracer:   tracer,
+		Recorder: recorder,
+	})
+}
 
 func TestHandler(t *testing.T) {
 	tracer, transport := transporttest.NewRecorderTracer()
@@ -57,9 +77,10 @@ func TestHandler(t *testing.T) {
 				Path:     "/foo",
 			},
 			Method: "GET",
-			Headers: &model.RequestHeaders{
-				UserAgent: "apmhttp_test",
-			},
+			Headers: model.Headers{{
+				Key:    "User-Agent",
+				Values: []string{"apmhttp_test"},
+			}},
 			HTTPVersion: "1.1",
 		},
 		Response: &model.Response{
@@ -116,9 +137,16 @@ func TestHandlerHTTP2(t *testing.T) {
 				Path:     "/foo",
 			},
 			Method: "GET",
-			Headers: &model.RequestHeaders{
-				UserAgent: "Go-http-client/2.0",
-			},
+			Headers: model.Headers{{
+				Key:    "Accept-Encoding",
+				Values: []string{"gzip"},
+			}, {
+				Key:    "User-Agent",
+				Values: []string{"Go-http-client/2.0"},
+			}, {
+				Key:    "X-Real-Ip",
+				Values: []string{"client.testing"},
+			}},
 			HTTPVersion: "2.0",
 		},
 		Response: &model.Response{
@@ -229,6 +257,36 @@ func TestHandlerRecovery(t *testing.T) {
 	assert.Equal(t, &model.Response{
 		StatusCode: 418,
 	}, transaction.Context.Response)
+}
+
+func TestHandlerRecoveryNoHeaders(t *testing.T) {
+	tracer, transport := transporttest.NewRecorderTracer()
+	defer tracer.Close()
+
+	h := apmhttp.Wrap(
+		http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			panic("foo")
+		}),
+		apmhttp.WithTracer(tracer),
+	)
+
+	server := httptest.NewServer(h)
+	defer server.Close()
+
+	resp, err := http.Get(server.URL)
+	require.NoError(t, err)
+	resp.Body.Close()
+
+	// Panic is translated into a 500 response.
+	assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+	tracer.Flush(nil)
+
+	payloads := transport.Payloads()
+	error0 := payloads.Errors[0]
+	transaction := payloads.Transactions[0]
+
+	assert.Equal(t, &model.Response{StatusCode: resp.StatusCode}, transaction.Context.Response)
+	assert.Equal(t, &model.Response{StatusCode: resp.StatusCode}, error0.Context.Response)
 }
 
 func TestHandlerRequestIgnorer(t *testing.T) {

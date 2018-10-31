@@ -16,7 +16,7 @@ matrix:
 
 before_install:
   - go get -v golang.org/x/tools/cmd/goimports
-  - go get -v golang.org/x/lint/golint
+  - if (go run scripts/mingoversion.go 1.10 &>/dev/null); then go get -v golang.org/x/lint/golint; fi
 
 script:
   - make install check
@@ -24,6 +24,14 @@ script:
 jobs:
   include:
     - os: osx     
+
+    - name: "W3C Distributed Tracing Validation"
+      sudo: required
+      services:
+        - docker
+      script:
+        - scripts/docker-compose-testing run -T --rm trace-context-harness
+
     - stage: coverage
       sudo: required
       services:

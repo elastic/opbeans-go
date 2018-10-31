@@ -323,10 +323,9 @@ func (h apiHandlers) postOrderCommon(c *gin.Context, customerID int, lines []Pro
 		return
 	}
 
-	// Set tags and custom context in line with opbeans-python.
 	if tx := apm.TransactionFromContext(c.Request.Context()); tx != nil {
-		tx.Context.SetCustom("customer_name", customer.FullName)
-		tx.Context.SetCustom("customer_email", customer.Email)
+		tx.Context.SetTag("customer_name", customer.FullName)
+		tx.Context.SetTag("customer_email", customer.Email)
 	}
 	c.JSON(http.StatusOK, gin.H{"id": orderID})
 }

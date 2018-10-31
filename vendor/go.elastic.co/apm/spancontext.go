@@ -42,7 +42,11 @@ func (c *SpanContext) build() *model.SpanContext {
 
 func (c *SpanContext) reset() {
 	// TODO(axw) reuse space for tags
-	*c = SpanContext{}
+	*c = SpanContext{
+		model: model.SpanContext{
+			Tags: c.model.Tags[:0],
+		},
+	}
 }
 
 // SetTag sets a tag in the context. If the key is invalid
@@ -51,21 +55,22 @@ func (c *SpanContext) SetTag(key, value string) {
 	if !validTagKey(key) {
 		return
 	}
-	value = truncateKeyword(value)
-	if c.model.Tags == nil {
-		c.model.Tags = map[string]string{key: value}
-	} else {
-		c.model.Tags[key] = value
-	}
+	value = truncateString(value)
+	// Note that we do not attempt to de-duplicate the keys.
+	// This is OK, since json.Unmarshal will always take the
+	// final instance.
+	c.model.Tags = append(c.model.Tags, model.StringMapItem{
+		Key: key, Value: value,
+	})
 }
 
 // SetDatabase sets the span context for database-related operations.
 func (c *SpanContext) SetDatabase(db DatabaseSpanContext) {
 	c.database = model.DatabaseSpanContext{
-		Instance:  truncateKeyword(db.Instance),
-		Statement: truncateText(db.Statement),
-		Type:      truncateKeyword(db.Type),
-		User:      truncateKeyword(db.User),
+		Instance:  truncateString(db.Instance),
+		Statement: truncateLongString(db.Statement),
+		Type:      truncateString(db.Type),
+		User:      truncateString(db.User),
 	}
 	c.model.Database = &c.database
 }

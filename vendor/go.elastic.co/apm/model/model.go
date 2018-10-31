@@ -198,7 +198,7 @@ type SpanContext struct {
 	HTTP *HTTPSpanContext `json:"http,omitempty"`
 
 	// Tags holds user-defined key/value pairs.
-	Tags map[string]string `json:"tags,omitempty"`
+	Tags StringMap `json:"tags,omitempty"`
 }
 
 // DatabaseSpanContext holds contextual information for database
@@ -239,11 +239,8 @@ type Context struct {
 	// transaction or error, if relevant.
 	User *User `json:"user,omitempty"`
 
-	// Custom holds arbitrary additional metadata.
-	Custom IfaceMap `json:"custom,omitempty"`
-
 	// Tags holds user-defined key/value pairs.
-	Tags map[string]string `json:"tags,omitempty"`
+	Tags StringMap `json:"tags,omitempty"`
 
 	// Service holds values to overrides service-level metadata.
 	Service *Service `json:"service,omitempty"`
@@ -396,7 +393,7 @@ type Request struct {
 	Method string `json:"method"`
 
 	// Headers holds the request headers.
-	Headers *RequestHeaders `json:"headers,omitempty"`
+	Headers Headers `json:"headers,omitempty"`
 
 	// Body holds the request body, if body capture is enabled.
 	Body *RequestBody `json:"body,omitempty"`
@@ -429,17 +426,13 @@ type RequestBody struct {
 	Form url.Values
 }
 
-// RequestHeaders holds a limited subset of HTTP request headers.
-type RequestHeaders struct {
-	// ContentType holds the content-type header.
-	ContentType string `json:"content-type,omitempty"`
+// Headers holds a collection of HTTP headers.
+type Headers []Header
 
-	// Cookie holds the cookies sent with the request,
-	// delimited by semi-colons.
-	Cookie string `json:"cookie,omitempty"`
-
-	// UserAgent holds the user-agent header.
-	UserAgent string `json:"user-agent,omitempty"`
+// Header holds an HTTP header, with one or more values.
+type Header struct {
+	Key    string
+	Values []string
 }
 
 // RequestSocket holds transport-level information relating to an HTTP request.
@@ -485,7 +478,7 @@ type Response struct {
 	StatusCode int `json:"status_code,omitempty"`
 
 	// Headers holds the response headers.
-	Headers *ResponseHeaders `json:"headers,omitempty"`
+	Headers Headers `json:"headers,omitempty"`
 
 	// HeadersSent indicates whether or not headers were sent
 	// to the client.
@@ -493,12 +486,6 @@ type Response struct {
 
 	// Finished indicates whether or not the response was finished.
 	Finished *bool `json:"finished,omitempty"`
-}
-
-// ResponseHeaders holds a limited subset of HTTP respponse headers.
-type ResponseHeaders struct {
-	// ContentType holds the content-type header.
-	ContentType string `json:"content-type,omitempty"`
 }
 
 // Time is a timestamp, formatted as a number of microseconds since January 1, 1970 UTC.

@@ -1,3 +1,17 @@
+// Copyright 2018 Elasticsearch BV
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package fastjson
 
 import (
@@ -6,24 +20,26 @@ import (
 	"unicode/utf8"
 )
 
-// Writer is a JSON writer.
+// Writer is a JSON writer, appending to an internal buffer.
+//
+// Writer is not safe for concurrent use. A Writer can be
+// reset and reused, which will reuse the underlying buffer.
 type Writer struct {
 	buf []byte
 }
 
-// Bytes returns the internal buffer. The result
-// is invalidated when Reset is called.
+// Bytes returns the internal buffer. The result is invalidated when Reset is called.
 func (w *Writer) Bytes() []byte {
 	return w.buf
 }
 
-// Size returns the current size of the buffer.
+// Size returns the current size of the buffer. Size is typically used in conjunction
+// with Rewind, to mark a position to which the writer may later be rewound.
 func (w *Writer) Size() int {
 	return len(w.buf)
 }
 
-// Rewind rewinds the buffer such that it has size bytes,
-// dropping everything proceeding.
+// Rewind rewinds the buffer such that it has size bytes, dropping everything proceeding.
 func (w *Writer) Rewind(size int) {
 	w.buf = w.buf[:size]
 }
@@ -74,9 +90,22 @@ func (w *Writer) Bool(v bool) {
 }
 
 // Time appends t to the buffer, formatted according to layout.
+//
+// The encoded time is not surrounded by quotes; it is the
+// responsibility of the caller to ensure the formatted time is
+// quoted as necessary.
 func (w *Writer) Time(t time.Time, layout string) {
 	w.buf = t.AppendFormat(w.buf, layout)
 }
+
+// String appends s, quoted and escaped, to the buffer.
+func (w *Writer) String(s string) {
+	w.RawByte('"')
+	w.StringContents(s)
+	w.RawByte('"')
+}
+
+// Note: code below taken from mailru/easyjson, adapted to use Writer.
 
 const chars = "0123456789abcdef"
 
@@ -89,17 +118,9 @@ func isNotEscapedSingleChar(c byte, escapeHTML bool) bool {
 	return c != '\\' && c != '"' && c >= 0x20 && c < utf8.RuneSelf
 }
 
-// String appends s, quoted and escaped, to the buffer.
-func (w *Writer) String(s string) {
-	w.RawByte('"')
-	w.StringContents(s)
-	w.RawByte('"')
-}
-
 // StringContents is the same as String, but without the surrounding quotes.
 func (w *Writer) StringContents(s string) {
-	// Portions of the string that contain no escapes are appended as
-	// byte slices.
+	// Portions of the string that contain no escapes are appended as byte slices.
 
 	p := 0 // last non-escape symbol
 
