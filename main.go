@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"html/template"
+	"io/ioutil"
 	"math/rand"
 	"net"
 	"net/http"
@@ -31,7 +32,8 @@ import (
 )
 
 const (
-	cacheURLFormat = "'inmem' or 'redis://user:pass@host'"
+	cacheURLFormat    = "'inmem' or 'redis://user:pass@host'"
+	indexTemplateName = "index"
 )
 
 var (
@@ -98,6 +100,25 @@ func Main(logger *logrus.Logger) error {
 		}
 	}
 
+	// Read index.html, replace <head> with <head><script>...
+	// that injects the dynamic page load properties for RUM.
+	indexFileBytes, err := ioutil.ReadFile(indexFilePath)
+	if err != nil {
+		return err
+	}
+	indexFileContent := strings.Replace(string(indexFileBytes), "<head>", `<head>
+<script type="text/javascript">
+  window.rumConfig = {
+    pageLoadTraceId: {{.TraceContext.Trace}},
+    pageLoadSpanId: {{.EnsureParent}},
+    pageLoadSampled: {{.Sampled}},
+  }
+</script>`, 1)
+	indexTemplate, err := template.New(indexTemplateName).Parse(indexFileContent)
+	if err != nil {
+		return err
+	}
+
 	db, err := newDatabase(logger)
 	if err != nil {
 		return err
@@ -111,14 +132,15 @@ func Main(logger *logrus.Logger) error {
 
 	r := gin.New()
 	r.Use(gin.Logger())
-	r.Use(apmgin.Middleware(r))
 	r.Use(cache.Cache(&cacheStore))
+	r.Use(apmgin.Middleware(r))
 
 	pprof.Register(r)
 	r.Static("/static", staticDirPath)
 	r.Static("/images", imagesDirPath)
 	r.StaticFile("/favicon.ico", faviconFilePath)
-	r.StaticFile("/", indexFilePath)
+	r.SetHTMLTemplate(indexTemplate)
+	r.GET("/", handleIndex)
 	r.GET("/oopsie", handleOopsie)
 	r.GET("/rum-config.js", handleRUMConfig)
 	r.Use(func(c *gin.Context) {
@@ -130,8 +152,11 @@ func Main(logger *logrus.Logger) error {
 			"/orders",
 		} {
 			if strings.HasPrefix(c.Request.URL.Path, prefix) {
-				c.Request.URL.Path = "/"
-				r.HandleContext(c)
+				tx := apm.TransactionFromContext(c.Request.Context())
+				if tx != nil {
+					tx.Name = c.Request.Method + " " + prefix
+				}
+				handleIndex(c)
 				return
 			}
 		}
@@ -169,6 +194,10 @@ func Main(logger *logrus.Logger) error {
 	return r.Run(*listenAddr)
 }
 
+func handleIndex(c *gin.Context) {
+	c.HTML(200, indexTemplateName, apm.TransactionFromContext(c.Request.Context()))
+}
+
 func handleRUMConfig(c *gin.Context) {
 	apmServerURL := os.Getenv("ELASTIC_APM_JS_SERVER_URL")
 	if apmServerURL == "" {
@@ -177,7 +206,7 @@ func handleRUMConfig(c *gin.Context) {
 		apmServerURL = template.JSEscapeString(apmServerURL)
 	}
 	content := fmt.Sprintf("window.elasticApmJsBaseServerUrl = '%s';\n", apmServerURL)
-	c.Data(200, "text/javascript", []byte(content))
+	c.Data(200, "application/javascript", []byte(content))
 }
 
 func healthcheck(logger *logrus.Logger) error {

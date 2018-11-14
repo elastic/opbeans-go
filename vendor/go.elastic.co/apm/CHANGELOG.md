@@ -30,6 +30,9 @@
  - Return a more helpful error message when /intake/v2/events 404s, to detect old servers (#290)
  - Implement test service for w3c/distributed-tracing test harness (#293)
  - End HTTP client spans on response body closure (#289)
+ - module/apmgrpc requires Go 1.9+ (#300)
+ - Invalid tag key characters are replaced with underscores (#308)
+ - `ELASTIC_APM_LOG_FILE` and `ELASTIC_APM_LOG_LEVEL` introduced (#313)
 
 ## [v0.5.2](https://github.com/elastic/apm-agent-go/releases/tag/v0.5.2)
 

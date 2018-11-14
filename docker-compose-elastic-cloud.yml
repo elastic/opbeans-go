@@ -18,7 +18,6 @@ services:
       - PGPASSWORD=hunter2
       - PGDATABASE=opbeans
       - PGSSLMODE=disable
-      - ELASTIC_APM_DEBUG=log=true
     depends_on:
       redis:
         condition: service_healthy
@@ -34,7 +33,7 @@ services:
       - "-cache=redis://redis:6379"
 
   apm-server:
-    image: docker.elastic.co/apm/apm-server:${STACK_VERSION:-6.3.0}
+    image: docker.elastic.co/apm/apm-server:${STACK_VERSION:-6.5.0-SNAPSHOT}
     ports:
       - "127.0.0.1:${APM_SERVER_PORT:-8200}:8200"
       - "127.0.0.1:${APM_SERVER_MONITOR_PORT:-6060}:6060"
