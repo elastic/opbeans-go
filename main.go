@@ -56,8 +56,6 @@ func main() {
 		return
 	}
 
-	apm.DefaultTracer.SetLogger(logger)
-
 	// Instrument the default HTTP transport, so that outgoing
 	// (reverse-proxy) requests are reported as spans.
 	http.DefaultTransport = apmhttp.WrapRoundTripper(http.DefaultTransport)
