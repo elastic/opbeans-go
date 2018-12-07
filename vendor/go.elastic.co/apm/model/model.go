@@ -82,6 +82,12 @@ type System struct {
 
 	// Platform is the system's platform, or operating system name.
 	Platform string `json:"platform,omitempty"`
+
+	// Container describes the container running the service.
+	Container *Container `json:"container,omitempty"`
+
+	// Kubernetes describes the kubernetes node and pod running the service.
+	Kubernetes *Kubernetes `json:"kubernetes,omitempty"`
 }
 
 // Process represents an operating system process.
@@ -97,6 +103,40 @@ type Process struct {
 
 	// Argv holds the command line arguments used to start the process.
 	Argv []string `json:"argv,omitempty"`
+}
+
+// Container represents the container (e.g. Docker) running the service.
+type Container struct {
+	// ID is the unique container ID.
+	ID string `json:"id"`
+}
+
+// Kubernetes describes properties of the Kubernetes node and pod in which
+// the service is running.
+type Kubernetes struct {
+	// Namespace names the Kubernetes namespace in which the pod exists.
+	Namespace string `json:"namespace,omitempty"`
+
+	// Node describes the Kubernetes node running the service's pod.
+	Node *KubernetesNode `json:"node,omitempty"`
+
+	// Pod describes the Kubernetes pod running the service.
+	Pod *KubernetesPod `json:"pod,omitempty"`
+}
+
+// KubernetesNode describes a Kubernetes node.
+type KubernetesNode struct {
+	// Name holds the node name.
+	Name string `json:"name,omitempty"`
+}
+
+// KubernetesPod describes a Kubernetes pod.
+type KubernetesPod struct {
+	// Name holds the pod name.
+	Name string `json:"name,omitempty"`
+
+	// UID holds the pod UID.
+	UID string `json:"uid,omitempty"`
 }
 
 // Transaction represents a transaction handled by the service.
@@ -165,9 +205,16 @@ type Span struct {
 	// Duration holds the duration of the span, in milliseconds.
 	Duration float64 `json:"duration"`
 
-	// Type identifies the service-domain specific type of the span,
-	// e.g. "db.postgresql.query".
+	// Type identifies the overarching type of the span,
+	// e.g. "db" or "external".
 	Type string `json:"type"`
+
+	// Subtype identifies the subtype of the span,
+	// e.g. "mysql" or "http".
+	Subtype string `json:"subtype,omitempty"`
+
+	// Action identifies the action that is being undertaken, e.g. "query".
+	Action string `json:"action,omitempty"`
 
 	// ID holds the ID of the span.
 	ID SpanID `json:"id"`

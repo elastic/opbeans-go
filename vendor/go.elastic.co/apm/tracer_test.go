@@ -20,6 +20,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"go.elastic.co/apm"
+	"go.elastic.co/apm/internal/apmhostutil"
+	"go.elastic.co/apm/model"
 	"go.elastic.co/apm/transport"
 	"go.elastic.co/apm/transport/transporttest"
 )
@@ -117,15 +119,17 @@ func TestTracerErrorFlushes(t *testing.T) {
 	done := make(chan struct{})
 	go func() {
 		defer wg.Done()
+		var last int
 		for {
 			select {
 			case <-time.After(10 * time.Millisecond):
 				p := recorder.Payloads()
-				if len(p.Errors)+len(p.Transactions) > 0 {
+				if n := len(p.Errors) + len(p.Transactions); n > last {
+					last = n
 					payloads <- p
-					return
 				}
 			case <-done:
+				return
 			}
 		}
 	}()
@@ -143,16 +147,21 @@ func TestTracerErrorFlushes(t *testing.T) {
 
 	// Sending an error flushes the request body.
 	tracer.NewError(errors.New("zing")).Send()
-	select {
-	case <-time.After(2 * time.Second):
-		t.Fatalf("timed out waiting for request")
-	case p := <-payloads:
-		assert.Len(t, p.Errors, 1)
+	deadline := time.After(2 * time.Second)
+	for {
+		var p transporttest.Payloads
+		select {
+		case <-deadline:
+			t.Fatalf("timed out waiting for request")
+		case p = <-payloads:
+		}
+		if len(p.Errors) != 0 {
+			assert.Len(t, p.Errors, 1)
+			break
+		}
+		// The transport may not have decoded
+		// the error yet, continue waiting.
 	}
-
-	// TODO(axw) tracer.Close should wait for the current request
-	// to complete, at least for a short amount of time.
-	tracer.Flush(nil)
 }
 
 func TestTracerRecovered(t *testing.T) {
@@ -349,7 +358,57 @@ func TestTracerBodyUnread(t *testing.T) {
 	for atomic.LoadInt64(&requests) <= 1 {
 		tracer.StartTransaction("name", "type").End()
 	}
+}
+
+func TestTracerMetadata(t *testing.T) {
+	tracer, recorder := transporttest.NewRecorderTracer()
+	defer tracer.Close()
+
+	tracer.StartTransaction("name", "type").End()
 	tracer.Flush(nil)
+
+	// TODO(axw) check other metadata
+	system, _, _ := recorder.Metadata()
+	container, err := apmhostutil.Container()
+	if err != nil {
+		assert.Nil(t, system.Container)
+	} else {
+		require.NotNil(t, system.Container)
+		assert.Equal(t, container, system.Container)
+	}
+}
+
+func TestTracerKubernetesMetadata(t *testing.T) {
+	t.Run("no-env", func(t *testing.T) {
+		system, _, _ := getSubprocessMetadata(t)
+		assert.Nil(t, system.Kubernetes)
+	})
+
+	t.Run("namespace-only", func(t *testing.T) {
+		system, _, _ := getSubprocessMetadata(t, "KUBERNETES_NAMESPACE=myapp")
+		assert.Equal(t, &model.Kubernetes{
+			Namespace: "myapp",
+		}, system.Kubernetes)
+	})
+
+	t.Run("pod-only", func(t *testing.T) {
+		system, _, _ := getSubprocessMetadata(t, "KUBERNETES_POD_NAME=luna", "KUBERNETES_POD_UID=oneone!11")
+		assert.Equal(t, &model.Kubernetes{
+			Pod: &model.KubernetesPod{
+				Name: "luna",
+				UID:  "oneone!11",
+			},
+		}, system.Kubernetes)
+	})
+
+	t.Run("node-only", func(t *testing.T) {
+		system, _, _ := getSubprocessMetadata(t, "KUBERNETES_NODE_NAME=noddy")
+		assert.Equal(t, &model.Kubernetes{
+			Node: &model.KubernetesNode{
+				Name: "noddy",
+			},
+		}, system.Kubernetes)
+	})
 }
 
 type blockedTransport struct {

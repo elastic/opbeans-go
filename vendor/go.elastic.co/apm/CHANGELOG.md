@@ -1,6 +1,20 @@
 # Changelog
 
-## [Unreleased](https://github.com/elastic/apm-agent-go/compare/v0.5.2...master)
+## [Unreleased](https://github.com/elastic/apm-agent-go/compare/v1.0.0...master)
+
+ - Stop pooling Transaction/Span/Error, introduce internal pooled objects (#319)
+ - Enable metrics collection with default interval of 30s (#322)
+ - `ELASTIC_APM_SERVER_CERT` enables server certificate pinning (#325)
+ - Add Docker container ID to metadata (#330)
+ - Added distributed trace context propagation to apmgrpc (#335)
+ - Introduce `Span.Subtype`, `Span.Action` (#332)
+ - apm.StartSpanOptions fixed to stop ignoring options (#326)
+ - Add Kubernetes pod info to metadata (#342)
+ - module/apmsql: don't report driver.ErrBadConn, context.Canceled (#346, #348)
+ - Added ErrorLogRecord.Error field, for associating an error value with a log record (#380)
+ - module/apmlogrus: introduce logrus exception-tracking hook, and log correlation (#381)
+
+## [v1.0.0](https://github.com/elastic/apm-agent-go/releases/tag/v1.0.0)
 
  - Implement v2 intake protocol (#180)
  - Unexport Transaction.Timestamp and Span.Timestamp (#207)
