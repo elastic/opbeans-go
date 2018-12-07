@@ -43,11 +43,15 @@ func StartSpan(ctx context.Context, name, spanType string) (*Span, context.Conte
 // and parent span in the context, if any. If the span isn't dropped, it will be
 // stored in the resulting context.
 //
+// If opts.Parent is non-zero, its value will be used in preference to any parent
+// span in ctx.
+//
 // StartSpanOptions always returns a non-nil Span. Its End method must be called
 // when the span completes.
 func StartSpanOptions(ctx context.Context, name, spanType string, opts SpanOptions) (*Span, context.Context) {
 	tx := TransactionFromContext(ctx)
-	span := tx.StartSpan(name, spanType, SpanFromContext(ctx))
+	opts.parent = SpanFromContext(ctx)
+	span := tx.StartSpanOptions(name, spanType, opts)
 	if !span.Dropped() {
 		ctx = ContextWithSpan(ctx, span)
 	}
@@ -59,23 +63,31 @@ func StartSpanOptions(ctx context.Context, name, spanType string, opts SpanOptio
 // from err. The Error.Handled field will be set to true, and a stacktrace
 // set either from err, or from the caller.
 //
-// If there is no span or transaction in the context, or the transaction
-// is not being sampled, CaptureError returns nil. As a convenience, if
-// the provided error is nil, then CaptureError will also return nil.
+// If there is no span or transaction in the context, CaptureError returns
+// nil. As a convenience, if the provided error is nil, then CaptureError
+// will also return nil.
 func CaptureError(ctx context.Context, err error) *Error {
 	if err == nil {
 		return nil
 	}
 	var e *Error
 	if span := SpanFromContext(ctx); span != nil {
-		e = span.tracer.NewError(err)
-		e.SetSpan(span)
-	} else if tx := TransactionFromContext(ctx); tx != nil && tx.Sampled() {
-		e = tx.tracer.NewError(err)
-		e.SetTransaction(tx)
-	} else {
-		return nil
+		span.mu.RLock()
+		if !span.ended() {
+			e = span.tracer.NewError(err)
+			e.setSpanData(span.SpanData)
+		}
+		span.mu.RUnlock()
+	} else if tx := TransactionFromContext(ctx); tx != nil {
+		tx.mu.RLock()
+		if !tx.ended() {
+			e = tx.tracer.NewError(err)
+			e.setTransactionData(tx.TransactionData)
+		}
+		tx.mu.RUnlock()
 	}
-	e.Handled = true
+	if e != nil {
+		e.Handled = true
+	}
 	return e
 }

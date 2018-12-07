@@ -1,10 +1,11 @@
+[![Build Status](https://apm-ci.elastic.co/buildStatus/icon?job=apm-agent-go/apm-agent-go-mbp/master)](https://apm-ci.elastic.co/job/apm-agent-go/job/apm-agent-go-mbp/job/master/)
 [![GoDoc](https://godoc.org/go.elastic.co/apm?status.svg)](http://godoc.org/go.elastic.co/apm)
 [![Travis-CI](https://travis-ci.org/elastic/apm-agent-go.svg)](https://travis-ci.org/elastic/apm-agent-go)
 [![AppVeyor](https://ci.appveyor.com/api/projects/status/28fhswvqqc7p90f7?svg=true)](https://ci.appveyor.com/project/AndrewWilkins/apm-agent-go)
 [![Go Report Card](https://goreportcard.com/badge/go.elastic.co/apm)](https://goreportcard.com/report/go.elastic.co/apm)
 [![codecov.io](https://codecov.io/github/elastic/apm-agent-go/coverage.svg?branch=master)](https://codecov.io/github/elastic/apm-agent-go?branch=master)
 
-# apm-agent-go: APM Agent for Go (beta)
+# apm-agent-go: APM Agent for Go
 
 This is the official Go package for [Elastic APM](https://www.elastic.co/solutions/apm).
 
@@ -23,6 +24,8 @@ go get -u go.elastic.co/apm
 ## Requirements
 
 Tested with Go 1.8+ on Linux, Windows and MacOS.
+
+Requires [APM Server](https://github.com/elastic/apm-server) v6.5 or newer.
 
 ## License
 

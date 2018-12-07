@@ -12,12 +12,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
+
 	"go.elastic.co/apm"
 )
 
-func addAPIHandlers(r *gin.RouterGroup, db *sqlx.DB, logger *logrus.Logger) {
-	h := apiHandlers{db, logger}
+func addAPIHandlers(r *gin.RouterGroup, db *sqlx.DB) {
+	h := apiHandlers{db}
 	r.GET("/stats", h.getStats)
 	r.GET("/products", h.getProducts)
 	r.GET("/products/:id", h.getProductDetails)
@@ -33,8 +33,7 @@ func addAPIHandlers(r *gin.RouterGroup, db *sqlx.DB, logger *logrus.Logger) {
 }
 
 type apiHandlers struct {
-	db  *sqlx.DB
-	log *logrus.Logger
+	db *sqlx.DB
 }
 
 func (h apiHandlers) getStats(c *gin.Context) {
@@ -46,7 +45,7 @@ func (h apiHandlers) getStats(c *gin.Context) {
 	err := cache.Get(cacheKey, &stats)
 	switch err {
 	case nil:
-		h.log.Debug("serving stats from cache")
+		contextLogger(c).Debug("serving stats from cache")
 		c.JSON(http.StatusOK, stats)
 		if tx := apm.TransactionFromContext(c.Request.Context()); tx != nil {
 			tx.Context.SetTag("served_from_cache", "true")
@@ -75,7 +74,7 @@ func (h apiHandlers) getStats(c *gin.Context) {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-	h.log.Debug("cached stats")
+	contextLogger(c).Debug("cached stats")
 	c.JSON(http.StatusOK, stats)
 }
 

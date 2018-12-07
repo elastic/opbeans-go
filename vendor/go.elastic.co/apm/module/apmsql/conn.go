@@ -68,10 +68,20 @@ func (c *conn) finishSpan(ctx context.Context, span *apm.Span, resultError *erro
 		// in check.
 		return
 	}
-	span.End()
-	if e := apm.CaptureError(ctx, *resultError); e != nil {
-		e.Send()
+	switch *resultError {
+	case nil, driver.ErrBadConn, context.Canceled:
+		// ErrBadConn is used by the connection pooling
+		// logic in database/sql, and so is expected and
+		// should not be reported.
+		//
+		// context.Canceled means the callers canceled
+		// the operation, so this is also expected.
+	default:
+		if e := apm.CaptureError(ctx, *resultError); e != nil {
+			e.Send()
+		}
 	}
+	span.End()
 }
 
 func (c *conn) Ping(ctx context.Context) (resultError error) {

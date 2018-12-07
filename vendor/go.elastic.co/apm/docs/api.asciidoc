@@ -90,7 +90,7 @@ transaction := apm.DefaultTracer.StartTransactionOptions("GET /", "request", opt
 ==== `func (*Transaction) End()`
 
 End enqueues the transaction for sending to the Elastic APM server.
-The Transaction must not be used after this.
+The Transaction must not be modified after this.
 
 The transaction's duration will be calculated as the amount of time
 elapsed since the transaction was started until this call. To override
@@ -189,6 +189,9 @@ type, and optional parent span, and with the start time set to the current time.
 If you need to set the timestamp or parent <<trace-context, trace context>>, you should
 use <<transaction-start-span-options, Transaction.StartSpanOptions>>.
 
+If the span type contains two dots, they are assumed to separate the span type, subtype,
+and action; a single dot separates span type and subtype, and the action will not be set.
+
 If the transaction is sampled, then the span's ID will be set, and its stacktrace will
 be set if the tracer is configured accordingly. If the transaction is not sampled, then
 the returned span will be silently discarded when its End method is called. You can
@@ -239,7 +242,7 @@ span, ctx := apm.StartSpan(ctx, "SELECT FROM foo", "db.mysql.query")
 [[span-end]]
 ==== `func (*Span) End()`
 
-End marks the span as complete; it must not be used after this.
+End marks the span as complete. The Span must not be modified after this.
 
 The span's duration will be calculated as the amount of time elapsed
 since the span was started until this call. To override this behaviour,
@@ -250,8 +253,8 @@ the span's Duration field may be set before calling End.
 ==== `func (*Span) Dropped() bool`
 
 Dropped indicates whether or not the span is dropped, meaning it will not be reported to
-the APM server. Spans are dropped when the created via a nil or non-sampled transaction,
-or one whose max spans limit has been reached.
+the APM server. Spans are dropped when the created with a nil, ended, or non-sampled
+transaction, or one whose max spans limit has been reached.
 
 [float]
 [[span-tracecontext]]
@@ -409,10 +412,15 @@ type ErrorLogRecord struct {
 	//
 	// This is optional.
 	LoggerName string
+
+	// Error is an error associated with the log record.
+	//
+	// This is optional.
+	Error error
 }
 ----
 
-The resulting Error's stacktrace will not be set. Call the SetStacktrace method to set it, if desired.
+The resulting Error's log stacktrace will not be set. Call the SetStacktrace method to set it, if desired.
 
 [source,go]
 ----
@@ -427,21 +435,20 @@ e.Send()
 [[error-set-transaction]]
 ==== `func (*Error) SetTransaction(*Transaction)`
 
-SetTransaction associates the error with the given transaction. The transaction's End method must
-not yet have been called.
+SetTransaction associates the error with the given transaction.
 
 [float]
 [[error-set-span]]
 ==== `func (*Error) SetSpan(*Span)`
 
 SetSpan associates the error with the given span, and the span's transaction. When calling SetSpan,
-it is not necessary to also call SetTransaction. The span's End method must not yet have been called.
+it is not necessary to also call SetTransaction.
 
 [float]
 [[error-send]]
 ==== `func (*Error) Send()`
 
-Send enqueues the error for sending to the Elastic APM server. The Error must not be used after this.
+Send enqueues the error for sending to the Elastic APM server.
 
 [float]
 [[tracer-recovered]]
@@ -492,8 +499,7 @@ transaction or span belongs, and trace options such as flags relating to samplin
 propagated between processes, e.g. in HTTP headers, in order to correlate events originating from
 related services.
 
-Elastic APM's trace context is based on the https://w3c.github.io/distributed-tracing/report-trace-context.html[W3C Trace Context]
-draft.
+Elastic APM's trace context is based on the https://w3c.github.io/trace-context/[W3C Trace Context] draft.
 
 [float]
 [[error-context]]
