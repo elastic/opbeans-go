@@ -13,7 +13,9 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+
 	"go.elastic.co/apm"
+	"go.elastic.co/apm/module/apmlogrus"
 )
 
 func addAPIHandlers(r *gin.RouterGroup, db *sqlx.DB, logger *logrus.Logger) {
@@ -33,8 +35,12 @@ func addAPIHandlers(r *gin.RouterGroup, db *sqlx.DB, logger *logrus.Logger) {
 }
 
 type apiHandlers struct {
-	db  *sqlx.DB
-	log *logrus.Logger
+	db   *sqlx.DB
+	_log *logrus.Logger
+}
+
+func (h apiHandlers) logger(c *gin.Context) logrus.FieldLogger {
+	return h._log.WithFields(apmlogrus.TraceContext(c.Request.Context()))
 }
 
 func (h apiHandlers) getStats(c *gin.Context) {
@@ -46,7 +52,7 @@ func (h apiHandlers) getStats(c *gin.Context) {
 	err := cache.Get(cacheKey, &stats)
 	switch err {
 	case nil:
-		h.log.Debug("serving stats from cache")
+		h.logger(c).Debug("serving stats from cache")
 		c.JSON(http.StatusOK, stats)
 		if tx := apm.TransactionFromContext(c.Request.Context()); tx != nil {
 			tx.Context.SetTag("served_from_cache", "true")
@@ -75,7 +81,7 @@ func (h apiHandlers) getStats(c *gin.Context) {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-	h.log.Debug("cached stats")
+	h.logger(c).Debug("cached stats")
 	c.JSON(http.StatusOK, stats)
 }
 

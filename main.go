@@ -25,9 +25,11 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+
 	"go.elastic.co/apm"
 	"go.elastic.co/apm/module/apmgin"
 	"go.elastic.co/apm/module/apmhttp"
+	"go.elastic.co/apm/module/apmlogrus"
 	"go.elastic.co/apm/module/apmsql"
 )
 
@@ -43,11 +45,16 @@ var (
 	frontendDir     = flag.String("frontend", "frontend/build", "Frontend assets dir")
 	cacheURL        = flag.String("cache", "inmem", "Cache URL ("+cacheURLFormat+")")
 	healthcheckAddr = flag.String("healthcheck", "", "Address to connect to for Docker healthchecking")
+	logLevel        = &logLevelFlag{Level: logrus.InfoLevel}
 )
 
 func main() {
+	flag.Var(logLevel, "loglevel", "Set the log level (trace, debug, info, warn, error, fatal, panic)")
 	flag.Parse()
 	logger := logrus.StandardLogger()
+	logger.Level = logLevel.Level
+	logger.AddHook(&apmlogrus.Hook{})
+
 	if *healthcheckAddr != "" {
 		if err := healthcheck(logger); err != nil {
 			logger.Errorf("healthcheck failed: %s", err)
@@ -179,7 +186,7 @@ func Main(logger *logrus.Logger) error {
 	maybeProxy := func(c *gin.Context) {
 		if len(backendURLs) > 0 && rand.Float64() < proxyProbability {
 			u := backendURLs[rand.Intn(len(backendURLs))]
-			logger.Infof("proxying API request to %s", u)
+			logger.WithFields(apmlogrus.TraceContext(c.Request.Context())).Infof("proxying API request to %s", u)
 			httputil.NewSingleHostReverseProxy(u).ServeHTTP(c.Writer, c.Request)
 			c.Abort()
 			return
@@ -285,4 +292,17 @@ func handleOopsie(c *gin.Context) {
 	default:
 		panic(fmt.Errorf("sonic %s", "boom"))
 	}
+}
+
+type logLevelFlag struct {
+	logrus.Level
+}
+
+func (f *logLevelFlag) Set(s string) error {
+	level, err := logrus.ParseLevel(s)
+	if err != nil {
+		return err
+	}
+	f.Level = level
+	return nil
 }

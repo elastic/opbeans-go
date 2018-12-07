@@ -31,13 +31,14 @@ services:
         condition: service_started
     command:
       - "/opbeans-go"
+      - "-loglevel=debug"
       - "-listen=:${OPBEANS_GO_PORT:-8000}"
       - "-frontend=/opbeans-frontend"
       - "-db=postgres:"
       - "-cache=redis://redis:6379"
 
   apm-server:
-    image: docker.elastic.co/apm/apm-server:${STACK_VERSION:-6.5.0-SNAPSHOT}
+    image: docker.elastic.co/apm/apm-server:${STACK_VERSION:-6.5.1}
     ports:
       - "127.0.0.1:${APM_SERVER_PORT:-8200}:8200"
       - "127.0.0.1:${APM_SERVER_MONITOR_PORT:-6060}:6060"
@@ -74,13 +75,13 @@ services:
       interval: 10s
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION:-6.5.0-SNAPSHOT}
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION:-6.5.1}
     environment:
       - cluster.name=docker-cluster
       - xpack.security.enabled=false
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
-      - "path.data=/usr/share/elasticsearch/data/${STACK_VERSION:-6.3.0}"
+      - "path.data=/usr/share/elasticsearch/data/${STACK_VERSION:-6.5.1}"
     ulimits:
       memlock:
         soft: -1
@@ -101,7 +102,7 @@ services:
       - esdata:/usr/share/elasticsearch/data
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:${STACK_VERSION:-6.5.0-SNAPSHOT}
+    image: docker.elastic.co/kibana/kibana:${STACK_VERSION:-6.5.1}
     environment:
       SERVER_NAME: kibana.example.org
       ELASTICSEARCH_URL: http://elasticsearch:9200
