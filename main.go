@@ -46,18 +46,24 @@ var (
 	cacheURL        = flag.String("cache", "inmem", "Cache URL ("+cacheURLFormat+")")
 	healthcheckAddr = flag.String("healthcheck", "", "Address to connect to for Docker healthchecking")
 	logLevel        = &logLevelFlag{Level: logrus.InfoLevel}
+	logJSON         = flag.Bool("log-json", false, "Format log records as JSON")
 )
 
+func init() {
+	flag.Var(logLevel, "log-level", "Set the log level (trace, debug, info, warn, error, fatal, panic)")
+}
+
 func main() {
-	flag.Var(logLevel, "loglevel", "Set the log level (trace, debug, info, warn, error, fatal, panic)")
 	flag.Parse()
-	logger := logrus.StandardLogger()
-	logger.Level = logLevel.Level
-	logger.AddHook(&apmlogrus.Hook{})
+	logrus.SetLevel(logLevel.Level)
+	if *logJSON {
+		logrus.SetFormatter(&logrus.JSONFormatter{})
+	}
+	logrus.AddHook(&apmlogrus.Hook{})
 
 	if *healthcheckAddr != "" {
-		if err := healthcheck(logger); err != nil {
-			logger.Errorf("healthcheck failed: %s", err)
+		if err := healthcheck(); err != nil {
+			logrus.Errorf("healthcheck failed: %s", err)
 			os.Exit(1)
 		}
 		return
@@ -67,12 +73,12 @@ func main() {
 	// (reverse-proxy) requests are reported as spans.
 	http.DefaultTransport = apmhttp.WrapRoundTripper(http.DefaultTransport)
 
-	if err := Main(logger); err != nil {
-		logger.Fatal(err)
+	if err := Main(); err != nil {
+		logrus.Fatal(err)
 	}
 }
 
-func Main(logger *logrus.Logger) error {
+func Main() error {
 	frontendBuildDir := filepath.FromSlash(*frontendDir)
 	indexFilePath := filepath.Join(frontendBuildDir, "index.html")
 	faviconFilePath := filepath.Join(frontendBuildDir, "favicon.ico")
@@ -124,7 +130,7 @@ func Main(logger *logrus.Logger) error {
 		return err
 	}
 
-	db, err := newDatabase(logger)
+	db, err := newDatabase()
 	if err != nil {
 		return err
 	}
@@ -136,9 +142,9 @@ func Main(logger *logrus.Logger) error {
 	}
 
 	r := gin.New()
-	r.Use(gin.Logger())
 	r.Use(cache.Cache(&cacheStore))
 	r.Use(apmgin.Middleware(r))
+	r.Use(logrusMiddleware)
 
 	pprof.Register(r)
 	r.Static("/static", staticDirPath)
@@ -186,7 +192,7 @@ func Main(logger *logrus.Logger) error {
 	maybeProxy := func(c *gin.Context) {
 		if len(backendURLs) > 0 && rand.Float64() < proxyProbability {
 			u := backendURLs[rand.Intn(len(backendURLs))]
-			logger.WithFields(apmlogrus.TraceContext(c.Request.Context())).Infof("proxying API request to %s", u)
+			logrus.WithFields(apmlogrus.TraceContext(c.Request.Context())).Infof("proxying API request to %s", u)
 			httputil.NewSingleHostReverseProxy(u).ServeHTTP(c.Writer, c.Request)
 			c.Abort()
 			return
@@ -194,7 +200,7 @@ func Main(logger *logrus.Logger) error {
 		c.Next()
 	}
 	apiGroup := r.Group("/api", maybeProxy)
-	addAPIHandlers(apiGroup, db, logger)
+	addAPIHandlers(apiGroup, db)
 
 	return r.Run(*listenAddr)
 }
@@ -214,7 +220,7 @@ func handleRUMConfig(c *gin.Context) {
 	c.Data(200, "application/javascript", []byte(content))
 }
 
-func healthcheck(logger *logrus.Logger) error {
+func healthcheck() error {
 	resp, err := http.Get(fmt.Sprintf("http://%s/api/orders", *healthcheckAddr))
 	if err != nil {
 		return err
@@ -225,7 +231,7 @@ func healthcheck(logger *logrus.Logger) error {
 	return json.NewDecoder(resp.Body).Decode(&orders)
 }
 
-func newDatabase(logger *logrus.Logger) (*sqlx.DB, error) {
+func newDatabase() (*sqlx.DB, error) {
 	fields := strings.SplitN(*database, ":", 2)
 	if len(fields) != 2 {
 		return nil, errors.Errorf(
@@ -244,7 +250,7 @@ func newDatabase(logger *logrus.Logger) (*sqlx.DB, error) {
 		return nil, err
 	}
 	dbx := sqlx.NewDb(db, driver)
-	if err := initDatabase(dbx, driver, logger); err != nil {
+	if err := initDatabase(dbx, driver); err != nil {
 		db.Close()
 		return nil, err
 	}
@@ -292,17 +298,4 @@ func handleOopsie(c *gin.Context) {
 	default:
 		panic(fmt.Errorf("sonic %s", "boom"))
 	}
-}
-
-type logLevelFlag struct {
-	logrus.Level
-}
-
-func (f *logLevelFlag) Set(s string) error {
-	level, err := logrus.ParseLevel(s)
-	if err != nil {
-		return err
-	}
-	f.Level = level
-	return nil
 }

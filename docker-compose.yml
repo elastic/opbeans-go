@@ -31,7 +31,8 @@ services:
         condition: service_started
     command:
       - "/opbeans-go"
-      - "-loglevel=debug"
+      - "-log-level=debug"
+      - "-log-json"
       - "-listen=:${OPBEANS_GO_PORT:-8000}"
       - "-frontend=/opbeans-frontend"
       - "-db=postgres:"
