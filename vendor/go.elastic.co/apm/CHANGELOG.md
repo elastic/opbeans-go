@@ -1,6 +1,12 @@
 # Changelog
 
-## [Unreleased](https://github.com/elastic/apm-agent-go/compare/v1.0.0...master)
+## [Unreleased](https://github.com/elastic/apm-agent-go/compare/v1.1.1...master)
+
+## [v1.1.1](https://github.com/elastic/apm-agent-go/releases/tag/v1.1.1)
+
+ - CPU% metrics are now correctly in the range [0,1]
+
+## [v1.1.0](https://github.com/elastic/apm-agent-go/releases/tag/v1.1.0)
 
  - Stop pooling Transaction/Span/Error, introduce internal pooled objects (#319)
  - Enable metrics collection with default interval of 30s (#322)
@@ -13,6 +19,8 @@
  - module/apmsql: don't report driver.ErrBadConn, context.Canceled (#346, #348)
  - Added ErrorLogRecord.Error field, for associating an error value with a log record (#380)
  - module/apmlogrus: introduce logrus exception-tracking hook, and log correlation (#381)
+ - module/apmbeego: introduce Beego instrumentation module (#386)
+ - module/apmhttp: report status code for client spans (#388)
 
 ## [v1.0.0](https://github.com/elastic/apm-agent-go/releases/tag/v1.0.0)
 
