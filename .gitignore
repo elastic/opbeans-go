@@ -1,2 +1,6 @@
 opbeans-go
 .idea/
+
+# For the BATS testing
+bats/
+target/

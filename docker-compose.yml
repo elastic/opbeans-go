@@ -5,6 +5,7 @@ services:
     image: opbeans-go:latest
     ports:
       - "127.0.0.1:${OPBEANS_GO_PORT:-8000}:8000"
+    container_name: opbeans-go
     logging:
       driver: 'json-file'
       options:
