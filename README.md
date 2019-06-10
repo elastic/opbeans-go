@@ -1,3 +1,5 @@
+[![Build Status](https://apm-ci.elastic.co/job/apm-agent-go/job/opbeans-go-mbp/job/master/badge/icon)](https://apm-ci.elastic.co/job/apm-agent-go/job/opbeans-go-mbp/job/master/)
+
 # opbeans-go
 
 This is a Go implementation of the Opbeans Demo app.
