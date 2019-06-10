@@ -2,7 +2,7 @@
 - job:
     name: apm-agent-go/opbeans-go-mbp
     display-name: Opbeans Go
-    description: Opbeans Go
+    description: Opbeans Go MBP
     project-type: multibranch
     number-to-keep: '5'
     days-to-keep: '1'
