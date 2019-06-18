@@ -12,16 +12,14 @@ require (
 	github.com/mattn/go-sqlite3 v1.10.0
 	github.com/pkg/errors v0.8.1
 	github.com/sirupsen/logrus v1.3.0
-	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/stretchr/testify v1.3.0
-	go.elastic.co/apm v1.2.0
-	go.elastic.co/apm/module/apmgin v1.2.0
-	go.elastic.co/apm/module/apmhttp v1.2.0
-	go.elastic.co/apm/module/apmlogrus v1.2.0
-	go.elastic.co/apm/module/apmsql v1.2.0
+	go.elastic.co/apm v1.3.0
+	go.elastic.co/apm/module/apmgin v1.3.0
+	go.elastic.co/apm/module/apmhttp v1.3.0
+	go.elastic.co/apm/module/apmlogrus v1.3.0
+	go.elastic.co/apm/module/apmsql v1.3.0
 	golang.org/x/crypto v0.0.0-20190617133340-57b3e21c3d56 // indirect
 	golang.org/x/net v0.0.0-20190613194153-d28f0bde5980 // indirect
 	golang.org/x/sys v0.0.0-20190618155005-516e3c20635f // indirect
 	golang.org/x/text v0.3.2 // indirect
-	golang.org/x/tools v0.0.0-20190618163018-fdf1049a943a // indirect
 )
