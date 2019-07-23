@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -35,15 +36,24 @@ func logrusMiddleware(c *gin.Context) {
 	c.Next()
 
 	logger := contextLogger(c)
+	status := c.Writer.Status()
 	entry := logger.WithFields(logrus.Fields{
 		"path":      path,
 		"method":    method,
 		"duration":  time.Since(start),
 		"client-ip": c.ClientIP(),
-		"status":    c.Writer.Status(),
+		"status":    status,
 	})
 	entry.Time = start
-	entry.Info()
+
+	logf := entry.Infof
+	switch {
+	case status >= http.StatusInternalServerError:
+		logf = entry.Errorf
+	case status >= http.StatusBadRequest:
+		logf = entry.Warningf
+	}
+	logf("%s %s (%d)", c.Request.Method, c.Request.URL.Path, status)
 }
 
 func newJSONFormatter() *logrus.JSONFormatter {
