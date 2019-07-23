@@ -45,3 +45,16 @@ func logrusMiddleware(c *gin.Context) {
 	entry.Time = start
 	entry.Info()
 }
+
+func newJSONFormatter() *logrus.JSONFormatter {
+	return &logrus.JSONFormatter{
+		FieldMap: logrus.FieldMap{
+			// ECS
+			logrus.FieldKeyTime:  "@timestamp",
+			logrus.FieldKeyLevel: "log.level",
+			logrus.FieldKeyMsg:   "message",
+			// Non-ECS
+			logrus.FieldKeyFunc: "function.name",
+		},
+	}
+}
