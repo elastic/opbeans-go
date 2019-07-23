@@ -57,7 +57,7 @@ func main() {
 	flag.Parse()
 	logrus.SetLevel(logLevel.Level)
 	if *logJSON {
-		logrus.SetFormatter(&logrus.JSONFormatter{})
+		logrus.SetFormatter(newJSONFormatter())
 	}
 	logrus.AddHook(&apmlogrus.Hook{})
 
