@@ -1,5 +1,6 @@
 FROM golang:1.11
 ENV GO111MODULE=on
+ENV CGO_ENABLED=0
 COPY go.mod go.sum /src/opbeans-go/
 WORKDIR /src/opbeans-go
 RUN go mod download
