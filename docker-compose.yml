@@ -30,6 +30,10 @@ services:
         condition: service_healthy
       postgres:
         condition: service_started
+    healthcheck:
+      test: ["CMD", "/opbeans-go", "-healthcheck", "localhost:8000"]
+      retries: 10
+      interval: 10s
     command:
       - "/opbeans-go"
       - "-log-level=debug"
@@ -145,6 +149,12 @@ services:
       - pgdata:/var/lib/postgresql/data
     ports:
       - "127.0.0.1:5432:5432"
+
+  wait:
+    image: busybox
+    depends_on:
+      opbeans-go:
+        condition: service_healthy
 
 volumes:
   esdata:
