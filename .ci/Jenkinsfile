@@ -85,6 +85,7 @@ pipeline {
           agent none
           steps {
             log(level: 'INFO', text: 'Launching Async ITs')
+            // TODO: AGENT_INTEGRATION_TEST = Opbeans when the apm-integration-testing gets merged
             build(job: env.ITS_PIPELINE, propagate: !changeRequest(), wait: !changeRequest(),
                   parameters: [string(name: 'AGENT_INTEGRATION_TEST', value: 'Go'),
                                string(name: 'BUILD_OPTS', value: "--with-opbeans-go --opbeans-go-branch ${env.GIT_BASE_COMMIT} --opbeans-go-repo ${env.CHANGE_FORK?.trim() ?: 'elastic' }/${env.REPO}"),
