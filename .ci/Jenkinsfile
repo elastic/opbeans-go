@@ -24,9 +24,6 @@ pipeline {
     rateLimitBuilds(throttle: [count: 60, durationName: 'hour', userBoost: true])
     quietPeriod(10)
   }
-  parameters {
-    booleanParam(name: 'Run_As_Master_Branch', defaultValue: false, description: 'Allow to run any steps on a PR, some steps normally only run on master branch.')
-  }
   triggers {
     issueCommentTrigger('(?i).*(?:jenkins\\W+)?run\\W+(?:the\\W+)?tests(?:\\W+please)?.*')
   }
@@ -98,15 +95,7 @@ pipeline {
           }
         }
         stage('Release') {
-          input {
-            message 'Should we release a new version?'
-            ok 'Yes, we should.'
-            parameters {
-              string(name: 'VERSION', defaultValue: 'latest', description: 'What tag?')
-            }
-          }
           when {
-            beforeInput true
             beforeAgent true
             allOf {
               anyOf {
@@ -114,7 +103,6 @@ pipeline {
                 branch "\\d+\\.\\d+"
                 branch "v\\d?"
                 tag "v\\d+\\.\\d+\\.\\d+*"
-                expression { return params.Run_As_Master_Branch }
               }
             }
           }
@@ -124,7 +112,7 @@ pipeline {
               unstash 'source'
               dir("${BASE_DIR}"){
                 dockerLogin(secret: "${DOCKERHUB_SECRET}", registry: 'docker.io')
-                sh "VERSION=${VERSION} make publish"
+                sh "VERSION=${BRANCH_NAME.equals('master') ? 'latest' : BRANCH_NAME} make publish"
               }
             }
           }
