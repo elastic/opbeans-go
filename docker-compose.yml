@@ -146,6 +146,12 @@ services:
     ports:
       - "127.0.0.1:5432:5432"
 
+  wait:
+    image: busybox
+    depends_on:
+      opbeans-go:
+        condition: service_healthy
+
 volumes:
   esdata:
     driver: local

@@ -4,7 +4,6 @@ load 'test_helper/bats-support/load'
 load 'test_helper/bats-assert/load'
 load test_helpers
 
-IMAGE="bats-opbeans"
 CONTAINER="opbeans-go"
 
 @test "build image" {
@@ -16,6 +15,11 @@ CONTAINER="opbeans-go"
 @test "create test container" {
 	run docker-compose up -d
 	assert_success
+}
+
+@test "test container with 0 as exitcode" {
+	run docker inspect -f {{.State.ExitCode}} $CONTAINER
+	assert_output '0'
 }
 
 @test "test container is running" {
