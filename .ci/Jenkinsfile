@@ -13,7 +13,6 @@ pipeline {
     PIPELINE_LOG_LEVEL = 'INFO'
     GITHUB_CHECK_ITS_NAME = 'Integration Tests'
     ITS_PIPELINE = 'apm-integration-tests-selector-mbp/master'
-    IMAGE = "docker.elastic.co/elastic/${env.REPO}"
   }
   options {
     timeout(time: 1, unit: 'HOURS')

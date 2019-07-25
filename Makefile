@@ -1,7 +1,7 @@
 PORT ?= 8000
 VERSION ?= latest
 LTS_ALPINE ?= 12-alpine
-IMAGE ?= opbeans/opbeans-go
+IMAGE=opbeans/opbeans-go
 .DEFAULT_GOAL := help
 
 help: ## Display this help text
