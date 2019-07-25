@@ -30,10 +30,6 @@ services:
         condition: service_healthy
       postgres:
         condition: service_started
-    healthcheck:
-      test: ["CMD", "/opbeans-go", "-healthcheck", "localhost:8000"]
-      retries: 10
-      interval: 10s
     command:
       - "/opbeans-go"
       - "-log-level=debug"
