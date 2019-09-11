@@ -33,11 +33,11 @@ pipeline {
     issueCommentTrigger('(?i).*(?:jenkins\\W+)?run\\W+(?:the\\W+)?tests(?:\\W+please)?.*')
   }
   stages {
-    options { skipDefaultCheckout() }
     /**
      Checkout the code and stash it, to use it on other stages.
     */
     stage('Checkout') {
+      options { skipDefaultCheckout() }
       steps {
         deleteDir()
         gitCheckout(basedir: "${BASE_DIR}")
@@ -48,6 +48,7 @@ pipeline {
     Build the project from code..
     */
     stage('Build') {
+      options { skipDefaultCheckout() }
       steps {
         withGithubNotify(context: 'Build') {
           deleteDir()
@@ -62,6 +63,7 @@ pipeline {
     Execute unit tests.
     */
     stage('Test') {
+      options { skipDefaultCheckout() }
       steps {
         withGithubNotify(context: 'Test', tab: 'tests') {
           deleteDir()
@@ -83,6 +85,7 @@ pipeline {
     Push docker image to the staging docker registry
     */
     stage('Staging') {
+      options { skipDefaultCheckout() }
       steps {
         withGithubNotify(context: 'Staging') {
           deleteDir()
@@ -108,6 +111,7 @@ pipeline {
       }
     }
     stage('Release') {
+      options { skipDefaultCheckout() }
       when {
         beforeAgent true
         allOf {
@@ -131,6 +135,7 @@ pipeline {
           }
         }
         stage('Release Notes') {
+          options { skipDefaultCheckout() }
           steps {
             withGithubNotify(context: 'Release Notes') {
               deleteDir()
