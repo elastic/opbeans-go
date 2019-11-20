@@ -2,14 +2,15 @@ version: "2.1"
 services:
   opbeans-go:
     build: .
-    image: opbeans-go:latest
+    image: opbeans/opbeans-go:latest
     ports:
       - "127.0.0.1:${OPBEANS_GO_PORT:-8000}:8000"
+    container_name: opbeans-go
     logging:
       driver: 'json-file'
       options:
-        max-size: '2m'
-        max-file: '5'
+          max-size: '2m'
+          max-file: '5'
     environment:
       - ELASTIC_APM_SERVER_URL=${ELASTIC_APM_SERVER_URL:-http://apm-server:8200}
       - ELASTIC_APM_JS_SERVER_URL=${ELASTIC_APM_JS_SERVER_URL:-http://localhost:8200}
@@ -18,6 +19,8 @@ services:
       - PGPASSWORD=hunter2
       - PGDATABASE=opbeans
       - PGSSLMODE=disable
+      - ELASTIC_APM_LOG_FILE=stderr
+      - ELASTIC_APM_LOG_LEVEL=debug
     depends_on:
       redis:
         condition: service_healthy
@@ -27,13 +30,15 @@ services:
         condition: service_started
     command:
       - "/opbeans-go"
+      - "-log-level=debug"
+      - "-log-json"
       - "-listen=:${OPBEANS_GO_PORT:-8000}"
       - "-frontend=/opbeans-frontend"
       - "-db=postgres:"
       - "-cache=redis://redis:6379"
 
   apm-server:
-    image: docker.elastic.co/apm/apm-server:${STACK_VERSION:-6.5.0-SNAPSHOT}
+    image: docker.elastic.co/apm/apm-server:${STACK_VERSION:-7.3.0}
     ports:
       - "127.0.0.1:${APM_SERVER_PORT:-8200}:8200"
       - "127.0.0.1:${APM_SERVER_MONITOR_PORT:-6060}:6060"
@@ -45,10 +50,12 @@ services:
         -E apm-server.read_timeout=1m
         -E apm-server.shutdown_timeout=2m
         -E apm-server.write_timeout=1m
+        -E apm-server.rum.enabled=true
         -E setup.template.settings.index.number_of_replicas=0
         -E xpack.monitoring.elasticsearch=true
         -E cloud.id=${ELASTIC_CLOUD_ID}
         -E cloud.auth=${ELASTIC_CLOUD_CREDENTIALS}
+        -E output.elasticsearch.enabled=${APM_SERVER_ELASTICSEARCH_OUTPUT_ENABLED:-true}
     cap_drop:
       - ALL
     cap_add:
@@ -59,10 +66,10 @@ services:
     logging:
       driver: 'json-file'
       options:
-        max-size: '2m'
-        max-file: '5'
+          max-size: '2m'
+          max-file: '5'
     healthcheck:
-      test: ["CMD", "curl", "--write-out", "'HTTP %{http_code}'", "--silent", "--output", "/dev/null", "http://apm-server:8200/healthcheck"]
+      test: ["CMD", "curl", "--write-out", "'HTTP %{http_code}'", "--silent", "--output", "/dev/null", "http://apm-server:8200/"]
       retries: 10
       interval: 10s
 
@@ -73,8 +80,8 @@ services:
     logging:
       driver: 'json-file'
       options:
-        max-size: '2m'
-        max-file: '5'
+          max-size: '2m'
+          max-file: '5'
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -89,6 +96,12 @@ services:
     ports:
       - "127.0.0.1:5432:5432"
 
+  wait:
+    image: busybox
+    depends_on:
+      opbeans-go:
+        condition: service_healthy
+      
 volumes:
   esdata:
     driver: local

@@ -1,7 +1,12 @@
+.ci
+.dockerignore
 .git
 .gitignore
+.gitmodules
+docker-compose*.yml
+Dockerfile
 Makefile
 README.md
-Dockerfile
 tests
 bats
+target
