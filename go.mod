@@ -18,11 +18,11 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/testify v1.3.0
 	github.com/ugorji/go/codec v1.1.7 // indirect
-	go.elastic.co/apm v1.5.0
-	go.elastic.co/apm/module/apmgin v1.5.0
-	go.elastic.co/apm/module/apmhttp v1.5.0
-	go.elastic.co/apm/module/apmlogrus v1.5.0
-	go.elastic.co/apm/module/apmsql v1.5.0
+	go.elastic.co/apm v1.6.0
+	go.elastic.co/apm/module/apmgin v1.6.0
+	go.elastic.co/apm/module/apmhttp v1.6.0
+	go.elastic.co/apm/module/apmlogrus v1.6.0
+	go.elastic.co/apm/module/apmsql v1.6.0
 	golang.org/x/sys v0.0.0-20190730183949-1393eb018365 // indirect
 	google.golang.org/appengine v1.6.1 // indirect
 )
