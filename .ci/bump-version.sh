@@ -2,7 +2,7 @@
 set -euxo pipefail
 
 if [ $# -lt 1 ]; then
-  echo "usage: ${0} folder"
+  echo "usage: ${0} Go_Agent_Version"
   exit 1
 fi
 AGENT_VERSION="${1}"
