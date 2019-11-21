@@ -16,5 +16,5 @@ go get "go.elastic.co/apm/...@${AGENT_VERSION}"
 go mod tidy
 
 # Commit changes
-#git add go.mod go.sum
-#git commit -m "Bump version ${AGENT_VERSION}"
+git add go.mod go.sum
+git commit -m "Bump version ${AGENT_VERSION}"
