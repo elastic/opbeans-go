@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euxo pipefail
+set -exo pipefail
 
 if [ $# -lt 1 ]; then
   echo "usage: ${0} Go_Agent_Version"
@@ -7,9 +7,14 @@ if [ $# -lt 1 ]; then
 fi
 AGENT_VERSION="${1}"
 
-# Install Go using the same travis approach
-echo "Installing ${GO_VERSION} with gimme."
-eval "$(curl -sL https://raw.githubusercontent.com/travis-ci/gimme/master/gimme | GIMME_GO_VERSION=${GO_VERSION} bash)"
+# Prepare the Go environment
+if [ -z ${GO_VERSION+x} ] ; then
+  echo "Using the already installed golang version."
+else
+  # Install Go using the same travis approach
+  echo "Installing ${GO_VERSION} with gimme."
+  eval "$(curl -sL https://raw.githubusercontent.com/travis-ci/gimme/master/gimme | GIMME_GO_VERSION=${GO_VERSION} bash)"
+fi
 
 # Update agent dependencies
 go get "go.elastic.co/apm/...@${AGENT_VERSION}"
