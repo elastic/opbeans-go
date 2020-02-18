@@ -4,6 +4,7 @@
     display-name: Opbeans Go MBP selector
     description: Opbeans Go MBP selector
     project-type: multibranch
+    concurrent: true
     script-path: .ci/selector.groovy
     scm:
     - github:
