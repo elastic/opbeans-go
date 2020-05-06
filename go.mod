@@ -1,5 +1,7 @@
 module github.com/elastic/opbeans-go
 
+go 1.14
+
 require (
 	github.com/gin-contrib/cache v1.1.0
 	github.com/gin-contrib/pprof v0.0.0-20181223171755-ea03ef73484d
@@ -16,11 +18,10 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/testify v1.4.0
-	github.com/ugorji/go/codec v1.1.7 // indirect
-	go.elastic.co/apm v1.7.0
-	go.elastic.co/apm/module/apmgin v1.7.0
-	go.elastic.co/apm/module/apmhttp v1.7.0
-	go.elastic.co/apm/module/apmlogrus v1.7.0
-	go.elastic.co/apm/module/apmsql v1.7.0
-	google.golang.org/appengine v1.6.1 // indirect
+	github.com/ugorji/go v1.1.7 // indirect
+	go.elastic.co/apm v1.8.0
+	go.elastic.co/apm/module/apmgin v1.8.0
+	go.elastic.co/apm/module/apmhttp v1.8.0
+	go.elastic.co/apm/module/apmlogrus v1.8.0
+	go.elastic.co/apm/module/apmsql v1.8.0
 )
