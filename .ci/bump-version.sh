@@ -20,6 +20,9 @@ fi
 go get "go.elastic.co/apm/...@${AGENT_VERSION}"
 go mod tidy
 
+## Bump agent version in the Dockerfile
+sed -ibck "s#\(org.label-schema.version=\)\(.*\)#\1\"${AGENT_VERSION}\"#g" Dockerfile
+
 # Commit changes
-git add go.mod go.sum
+git add go.mod go.sum Dockerfile
 git commit -m "Bump version ${AGENT_VERSION}"
