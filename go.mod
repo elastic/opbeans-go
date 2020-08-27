@@ -21,7 +21,7 @@ require (
 	github.com/ugorji/go v1.1.7 // indirect
 	go.elastic.co/apm v1.8.0
 	go.elastic.co/apm/module/apmgin v1.8.0
-	go.elastic.co/apm/module/apmhttp v1.8.0
+	go.elastic.co/apm/module/apmhttp v1.8.1-0.20200902013556-b34fe04da73f
 	go.elastic.co/apm/module/apmlogrus v1.8.0
 	go.elastic.co/apm/module/apmsql v1.8.0
 )

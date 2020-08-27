@@ -119,6 +119,8 @@ go.elastic.co/apm/module/apmgin v1.8.0 h1:QcXVtFhqAcSGqC/ywzqZBHdWzJG3wyrBxgvCvA
 go.elastic.co/apm/module/apmgin v1.8.0/go.mod h1:heH2rXaOluBb+ucwlG3FBCGrx56qHqoxb1KI7uBLlAk=
 go.elastic.co/apm/module/apmhttp v1.8.0 h1:5AJPefWJzWDLX/47XIDfaloGiYWkkOQEULvlrI6Ieaw=
 go.elastic.co/apm/module/apmhttp v1.8.0/go.mod h1:9LPFlEON51/lRbnWDfqAWErihIiAFDUMfMV27YjoWQ8=
+go.elastic.co/apm/module/apmhttp v1.8.1-0.20200902013556-b34fe04da73f h1:gMShmPeXBFC/l+UL2OM+62WBHTdGMhFt6ITe9iV7izo=
+go.elastic.co/apm/module/apmhttp v1.8.1-0.20200902013556-b34fe04da73f/go.mod h1:9LPFlEON51/lRbnWDfqAWErihIiAFDUMfMV27YjoWQ8=
 go.elastic.co/apm/module/apmlogrus v1.8.0 h1:HSz+gNSa88zLvoX36OaCSgbqTTCn7u3GrR6WqRu8RiU=
 go.elastic.co/apm/module/apmlogrus v1.8.0/go.mod h1:0TsyfBEaY5FaGS2p9UlSRhmf1T1zhmf9vcwgQTlI064=
 go.elastic.co/apm/module/apmsql v1.8.0 h1:YMGTshRcC9SI8p+hJNI7OzNnk7Dn9RjwuwO0MRcbvvE=
