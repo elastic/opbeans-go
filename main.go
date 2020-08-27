@@ -71,7 +71,7 @@ func main() {
 
 	// Instrument the default HTTP transport, so that outgoing
 	// (reverse-proxy) requests are reported as spans.
-	http.DefaultTransport = apmhttp.WrapRoundTripper(http.DefaultTransport)
+	http.DefaultTransport = apmhttp.WrapRoundTripper(http.DefaultTransport, apmhttp.WithClientTrace())
 
 	if err := Main(); err != nil {
 		logrus.Fatal(err)
