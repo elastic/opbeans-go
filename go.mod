@@ -17,9 +17,9 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/testify v1.5.1
 	github.com/ugorji/go v1.1.7 // indirect
-	go.elastic.co/apm v1.10.0
-	go.elastic.co/apm/module/apmgin v1.10.0
-	go.elastic.co/apm/module/apmhttp v1.10.0
-	go.elastic.co/apm/module/apmlogrus v1.10.0
-	go.elastic.co/apm/module/apmsql v1.10.0
+	go.elastic.co/apm v1.11.0
+	go.elastic.co/apm/module/apmgin v1.11.0
+	go.elastic.co/apm/module/apmhttp v1.11.0
+	go.elastic.co/apm/module/apmlogrus v1.11.0
+	go.elastic.co/apm/module/apmsql v1.11.0
 )
