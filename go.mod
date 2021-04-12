@@ -15,7 +15,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.11.0
 	github.com/pkg/errors v0.8.1
 	github.com/sirupsen/logrus v1.4.2
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.7.0
 	github.com/ugorji/go v1.1.7 // indirect
 	go.elastic.co/apm v1.11.0
 	go.elastic.co/apm/module/apmgin v1.11.0
