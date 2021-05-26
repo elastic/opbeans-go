@@ -11,11 +11,12 @@ require (
 	github.com/lib/pq v1.10.2
 	github.com/mattn/go-sqlite3 v1.14.7
 	github.com/pkg/errors v0.9.1
+	github.com/prometheus/procfs v0.0.3 // indirect
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
-	go.elastic.co/apm v1.11.0
-	go.elastic.co/apm/module/apmgin v1.11.0
-	go.elastic.co/apm/module/apmhttp v1.11.0
-	go.elastic.co/apm/module/apmlogrus v1.11.0
-	go.elastic.co/apm/module/apmsql v1.11.0
+	go.elastic.co/apm v1.12.0
+	go.elastic.co/apm/module/apmgin v1.12.0
+	go.elastic.co/apm/module/apmhttp v1.12.0
+	go.elastic.co/apm/module/apmlogrus v1.12.0
+	go.elastic.co/apm/module/apmsql v1.12.0
 )
