@@ -5,7 +5,7 @@ go 1.14
 require (
 	github.com/gin-contrib/cache v1.1.0
 	github.com/gin-contrib/pprof v0.0.0-20181223171755-ea03ef73484d
-	github.com/gin-gonic/gin v1.7.2
+	github.com/gin-gonic/gin v1.7.3
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/jmoiron/sqlx v1.3.4
 	github.com/lib/pq v1.10.2
