@@ -14,9 +14,9 @@ require (
 	github.com/prometheus/procfs v0.0.3 // indirect
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
-	go.elastic.co/apm v1.14.0
-	go.elastic.co/apm/module/apmgin v1.14.0
-	go.elastic.co/apm/module/apmhttp v1.14.0
-	go.elastic.co/apm/module/apmlogrus v1.14.0
-	go.elastic.co/apm/module/apmsql v1.14.0
+	go.elastic.co/apm v1.15.0
+	go.elastic.co/apm/module/apmgin v1.15.0
+	go.elastic.co/apm/module/apmhttp v1.15.0
+	go.elastic.co/apm/module/apmlogrus v1.15.0
+	go.elastic.co/apm/module/apmsql v1.15.0
 )
