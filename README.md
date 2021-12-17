@@ -1,4 +1,4 @@
-[![Build Status](https://apm-ci.elastic.co/buildStatus/icon?job=apm-agent-go%2Fopbeans-go-mbp%2Fmaster)](https://apm-ci.elastic.co/job/apm-agent-go/job/opbeans-go-mbp/job/master/)
+[![Build Status](https://apm-ci.elastic.co/buildStatus/icon?job=apm-agent-go%2Fopbeans-go-mbp%2Fmaster)](https://apm-ci.elastic.co/job/apm-agent-go/job/opbeans-go-mbp/job/main/)
 
 # opbeans-go
 
