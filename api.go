@@ -13,7 +13,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 
-	"go.elastic.co/apm"
+	"go.elastic.co/apm/v2"
 )
 
 func addAPIHandlers(r *gin.RouterGroup, db *sqlx.DB) {
