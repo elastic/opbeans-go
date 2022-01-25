@@ -26,11 +26,11 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
-	"go.elastic.co/apm"
-	"go.elastic.co/apm/module/apmgin"
-	"go.elastic.co/apm/module/apmhttp"
-	"go.elastic.co/apm/module/apmlogrus"
-	"go.elastic.co/apm/module/apmsql"
+	"go.elastic.co/apm/module/apmgin/v2"
+	"go.elastic.co/apm/module/apmhttp/v2"
+	"go.elastic.co/apm/module/apmlogrus/v2"
+	"go.elastic.co/apm/module/apmsql/v2"
+	"go.elastic.co/apm/v2"
 )
 
 const (

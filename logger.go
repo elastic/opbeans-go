@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	"go.elastic.co/apm/module/apmlogrus"
+	"go.elastic.co/apm/module/apmlogrus/v2"
 )
 
 type logLevelFlag struct {
