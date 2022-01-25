@@ -22,9 +22,9 @@ require (
 )
 
 replace (
-	go.elastic.co/apm/module/apmgin/v2 => github.com/axw/apm-agent-go/module/apmgin/v2 v2.0.0-20220124095827-77946126aaa3
-	go.elastic.co/apm/module/apmhttp/v2 => github.com/axw/apm-agent-go/module/apmhttp/v2 v2.0.0-20220124095827-77946126aaa3
-	go.elastic.co/apm/module/apmlogrus/v2 => github.com/axw/apm-agent-go/module/apmlogrus/v2 v2.0.0-20220124095827-77946126aaa3
-	go.elastic.co/apm/module/apmsql/v2 => github.com/axw/apm-agent-go/module/apmsql/v2 v2.0.0-20220124095827-77946126aaa3
-	go.elastic.co/apm/v2 => github.com/axw/apm-agent-go/v2 v2.0.0-20220124095827-77946126aaa3
+	go.elastic.co/apm/module/apmgin/v2 => github.com/elastic/apm-agent-go/module/apmgin/v2 v2.0.0-20220125052152-dbce0fc5646c
+	go.elastic.co/apm/module/apmhttp/v2 => github.com/elastic/apm-agent-go/module/apmhttp/v2 v2.0.0-20220125052152-dbce0fc5646c
+	go.elastic.co/apm/module/apmlogrus/v2 => github.com/elastic/apm-agent-go/module/apmlogrus/v2 v2.0.0-20220125052152-dbce0fc5646c
+	go.elastic.co/apm/module/apmsql/v2 => github.com/elastic/apm-agent-go/module/apmsql/v2 v2.0.0-20220125052152-dbce0fc5646c
+	go.elastic.co/apm/v2 => github.com/elastic/apm-agent-go/v2 v2.0.0-20220125052152-dbce0fc5646c
 )
