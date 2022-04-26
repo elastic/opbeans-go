@@ -7,7 +7,7 @@ require (
 	github.com/gin-contrib/pprof v0.0.0-20181223171755-ea03ef73484d
 	github.com/gin-gonic/gin v1.7.7
 	github.com/gomodule/redigo v2.0.0+incompatible
-	github.com/jmoiron/sqlx v1.3.4
+	github.com/jmoiron/sqlx v1.3.5
 	github.com/lib/pq v1.10.5
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/pkg/errors v0.9.1
