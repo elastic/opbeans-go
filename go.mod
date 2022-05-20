@@ -14,11 +14,11 @@ require (
 	github.com/prometheus/procfs v0.0.3 // indirect
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.1
-	go.elastic.co/apm/module/apmgin/v2 v2.0.0
-	go.elastic.co/apm/module/apmhttp/v2 v2.0.0
-	go.elastic.co/apm/module/apmlogrus/v2 v2.0.0
-	go.elastic.co/apm/module/apmsql/v2 v2.0.0
-	go.elastic.co/apm/v2 v2.0.0
+	go.elastic.co/apm/module/apmgin/v2 v2.1.0
+	go.elastic.co/apm/module/apmhttp/v2 v2.1.0
+	go.elastic.co/apm/module/apmlogrus/v2 v2.1.0
+	go.elastic.co/apm/module/apmsql/v2 v2.1.0
+	go.elastic.co/apm/v2 v2.1.0
 )
 
 replace (
