@@ -3,7 +3,7 @@ module github.com/elastic/opbeans-go
 go 1.14
 
 require (
-	github.com/gin-contrib/cache v1.1.0
+	github.com/gin-contrib/cache v1.2.0
 	github.com/gin-contrib/pprof v0.0.0-20181223171755-ea03ef73484d
 	github.com/gin-gonic/gin v1.8.1
 	github.com/gomodule/redigo v2.0.0+incompatible
@@ -13,7 +13,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/procfs v0.0.3 // indirect
 	github.com/sirupsen/logrus v1.8.1
-	github.com/stretchr/testify v1.7.5
+	github.com/stretchr/testify v1.8.0
 	go.elastic.co/apm/module/apmgin/v2 v2.1.0
 	go.elastic.co/apm/module/apmhttp/v2 v2.1.0
 	go.elastic.co/apm/module/apmlogrus/v2 v2.1.0
