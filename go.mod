@@ -12,7 +12,7 @@ require (
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/procfs v0.0.3 // indirect
-	github.com/sirupsen/logrus v1.8.1
+	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.0
 	go.elastic.co/apm/module/apmgin/v2 v2.1.0
 	go.elastic.co/apm/module/apmhttp/v2 v2.1.0
