@@ -20,7 +20,7 @@ LABEL \
     org.label-schema.schema-version="1.0" \
     org.label-schema.vendor="Elastic" \
     org.label-schema.name="opbeans-go" \
-    org.label-schema.version="v2.1.0" \
+    org.label-schema.version="v2.2.0" \
     org.label-schema.url="https://hub.docker.com/r/opbeans/opbeans-go" \
     org.label-schema.vcs-url="https://github.com/elastic/opbeans-go" \
     org.label-schema.license="MIT"
