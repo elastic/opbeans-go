@@ -29,7 +29,7 @@ sources:
     name: Get latest elastic-apm-go version
     kind: shell
     spec:
-      command: bash .ci/scripts/get-latest-version.sh
+      command: bash .ci/get-latest-version.sh
       environments:
         - name: PATH
 
@@ -39,7 +39,7 @@ conditions:
     kind: shell
     sourceid: elastic-apm-go
     spec:
-      command: bash .ci/scripts/test-version.sh
+      command: bash .ci/test-version.sh
       environments:
         - name: PATH
 
