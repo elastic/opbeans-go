@@ -51,7 +51,7 @@ targets:
     kind: file
     spec:
       file: Dockerfile
-      matchpattern: 'org\.label-schema\.version="(\d+.\d+.\d+)"'
+      matchpattern: 'org\.label-schema\.version="(v\d+.\d+.\d+)"'
       replacepattern: org.label-schema.version="{{ source `elastic-apm-go` }}"
 
   go.sum:
