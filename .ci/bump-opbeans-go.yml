@@ -54,7 +54,7 @@ targets:
       matchpattern: 'org\.label-schema\.version="(\d+.\d+.\d+)"'
       replacepattern: org.label-schema.version="{{ source `elastic-apm-go` }}"
 
-  npm:
+  go.sum:
     name: Install new elastic-apm-go go dependency version
     sourceid: elastic-apm-go
     scmid: githubConfig
