@@ -43,7 +43,7 @@ conditions:
     kind: shell
     sourceid: elastic-apm-go
     spec:
-      command: test $(go list -f '{{.Version}}' -m go.elastic.co/apm/v2) !=
+      command: bash .ci/test-version.sh
       environments:
         - name: PATH
 
