@@ -35,7 +35,7 @@ sources:
       username: '{{ requiredEnv "GIT_USER" }}'
       versionFilter:
         kind: regex
-        pattern: "v(\d*).(\d*).(\d*)$"
+        pattern: v(\d*)\.(\d*)\.(\d*)$
 
 conditions:
   elastic-apm-go-version-check:
