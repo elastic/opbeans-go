@@ -3,5 +3,5 @@
 ## are equally or not.
 
 set -eo pipefail
-test $(go list -json -m go.elastic.co/apm/v2 | jq -r .Version) != $1
+test "$(go list -f '{{.Version}}' -m go.elastic.co/apm/v2)" != "$1"
 exit $?
