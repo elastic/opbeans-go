@@ -27,11 +27,15 @@ actions:
 sources:
   elastic-apm-go:
     name: Get latest elastic-apm-go version
-    kind: shell
+    kind: githubrelease
     spec:
-      command: bash .ci/get-latest-version.sh
-      environments:
-        - name: PATH
+      owner: "elastic"
+      repository: "apm-agent-go"
+      token: '{{ requiredEnv "GITHUB_TOKEN" }}'
+      username: '{{ requiredEnv "GIT_USER" }}'
+      versionFilter:
+        kind: regex
+        pattern: "v(\d*).(\d*).(\d*)$"
 
 conditions:
   elastic-apm-go-version-check:
