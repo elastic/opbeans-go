@@ -1,0 +1,69 @@
+---
+## Workflow to periodically check if there is an available newer APM Go agent version, e.g.
+## "v1.2.3". If so, then update to it.
+name: Bump elastic-apm-go to latest version
+
+scms:
+  githubConfig:
+    kind: github
+    spec:
+      user: '{{ requiredEnv "GIT_USER" }}'
+      email: '{{ requiredEnv "GIT_EMAIL" }}'
+      owner: elastic
+      repository: opbeans-go
+      token: '{{ requiredEnv "GITHUB_TOKEN" }}'
+      username: '{{ requiredEnv "GIT_USER" }}'
+      branch: main
+
+actions:
+  opbeans-go:
+    kind: github/pullrequest
+    scmid: githubConfig
+    spec:
+      automerge: false
+      labels:
+        - dependencies
+
+sources:
+  elastic-apm-go:
+    name: Get latest elastic-apm-go version
+    kind: githubrelease
+    spec:
+      owner: "elastic"
+      repository: "apm-agent-go"
+      token: '{{ requiredEnv "GITHUB_TOKEN" }}'
+      username: '{{ requiredEnv "GIT_USER" }}'
+      versionFilter:
+        kind: regex
+        pattern: v(\d*)\.(\d*)\.(\d*)$
+
+conditions:
+  elastic-apm-go-version-check:
+    name: Check if installed version differs
+    kind: shell
+    sourceid: elastic-apm-go
+    spec:
+      command: bash .ci/test-version.sh
+      environments:
+        - name: PATH
+
+targets:
+  dockerfile:
+    name: Set org.label-schema.version in Dockerfile
+    sourceid: elastic-apm-go
+    scmid: githubConfig
+    kind: file
+    spec:
+      file: Dockerfile
+      matchpattern: 'org\.label-schema\.version="(v\d+.\d+.\d+)"'
+      replacepattern: org.label-schema.version="{{ source `elastic-apm-go` }}"
+
+  go.sum:
+    name: Install new elastic-apm-go go dependency version
+    sourceid: elastic-apm-go
+    scmid: githubConfig
+    kind: shell
+    spec:
+      command: bash .ci/go-install-elastic-apm-go.sh
+      environments:
+        - name: PATH
