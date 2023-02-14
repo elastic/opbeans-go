@@ -4,6 +4,7 @@ name: OpenTelemetry Export Trace
 on:
   workflow_run:
     workflows:
+      - bump-opbeans-go
       - test
       - test-reporter
       - release
