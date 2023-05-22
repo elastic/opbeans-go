@@ -13,7 +13,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/procfs v0.0.3 // indirect
-	github.com/sirupsen/logrus v1.9.0
+	github.com/sirupsen/logrus v1.9.2
 	github.com/stretchr/testify v1.8.2
 	go.elastic.co/apm/module/apmgin/v2 v2.2.0
 	go.elastic.co/apm/module/apmhttp/v2 v2.2.0
