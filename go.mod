@@ -13,11 +13,11 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.4
-	go.elastic.co/apm/module/apmgin/v2 v2.2.0
-	go.elastic.co/apm/module/apmhttp/v2 v2.2.0
-	go.elastic.co/apm/module/apmlogrus/v2 v2.2.0
-	go.elastic.co/apm/module/apmsql/v2 v2.2.0
-	go.elastic.co/apm/v2 v2.2.0
+	go.elastic.co/apm/module/apmgin/v2 v2.4.4
+	go.elastic.co/apm/module/apmhttp/v2 v2.4.4
+	go.elastic.co/apm/module/apmlogrus/v2 v2.4.4
+	go.elastic.co/apm/module/apmsql/v2 v2.4.4
+	go.elastic.co/apm/v2 v2.4.4
 )
 
 require (
@@ -26,8 +26,7 @@ require (
 	github.com/bytedance/sonic v1.9.1 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/elastic/go-licenser v0.3.1 // indirect
-	github.com/elastic/go-sysinfo v1.1.1 // indirect
+	github.com/elastic/go-sysinfo v1.7.1 // indirect
 	github.com/elastic/go-windows v1.0.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
@@ -35,7 +34,6 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.14.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
-	github.com/jcchavezs/porto v0.1.0 // indirect
 	github.com/joeshaw/multierror v0.0.0-20140124173710-69b34d4ec901 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
@@ -48,27 +46,15 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/procfs v0.0.3 // indirect
 	github.com/robfig/go-cache v0.0.0-20130306151617-9fc39e0dbf62 // indirect
-	github.com/santhosh-tekuri/jsonschema v1.2.4 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	go.elastic.co/fastjson v1.1.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
 	golang.org/x/crypto v0.9.0 // indirect
-	golang.org/x/lint v0.0.0-20201208152925-83fdc39ff7b5 // indirect
-	golang.org/x/mod v0.8.0 // indirect
 	golang.org/x/net v0.10.0 // indirect
 	golang.org/x/sys v0.8.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
-	golang.org/x/tools v0.6.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	howett.net/plist v0.0.0-20181124034731-591f970eefbb // indirect
-)
-
-replace (
-	go.elastic.co/apm/module/apmgin/v2 => github.com/elastic/apm-agent-go/module/apmgin/v2 v2.0.0-20220125052152-dbce0fc5646c
-	go.elastic.co/apm/module/apmhttp/v2 => github.com/elastic/apm-agent-go/module/apmhttp/v2 v2.0.0-20220125052152-dbce0fc5646c
-	go.elastic.co/apm/module/apmlogrus/v2 => github.com/elastic/apm-agent-go/module/apmlogrus/v2 v2.0.0-20220125052152-dbce0fc5646c
-	go.elastic.co/apm/module/apmsql/v2 => github.com/elastic/apm-agent-go/module/apmsql/v2 v2.0.0-20220125052152-dbce0fc5646c
-	go.elastic.co/apm/v2 => github.com/elastic/apm-agent-go/v2 v2.0.0-20220125052152-dbce0fc5646c
 )
