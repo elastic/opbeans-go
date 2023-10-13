@@ -48,13 +48,13 @@ func (h apiHandlers) getStats(c *gin.Context) {
 		contextLogger(c).Debug("serving stats from cache")
 		c.JSON(http.StatusOK, stats)
 		if tx := apm.TransactionFromContext(c.Request.Context()); tx != nil {
-			tx.Context.SetTag("served_from_cache", "true")
+			tx.Context.SetLabel("served_from_cache", "true")
 		}
 		return
 	case persistence.ErrCacheMiss:
 		// fetch and cache below
 		if tx := apm.TransactionFromContext(c.Request.Context()); tx != nil {
-			tx.Context.SetTag("served_from_cache", "false")
+			tx.Context.SetLabel("served_from_cache", "false")
 		}
 		break
 	default:
@@ -323,8 +323,8 @@ func (h apiHandlers) postOrderCommon(c *gin.Context, customerID int, lines []Pro
 	}
 
 	if tx := apm.TransactionFromContext(c.Request.Context()); tx != nil {
-		tx.Context.SetTag("customer_name", customer.FullName)
-		tx.Context.SetTag("customer_email", customer.Email)
+		tx.Context.SetLabel("customer_name", customer.FullName)
+		tx.Context.SetLabel("customer_email", customer.Email)
 	}
 	c.JSON(http.StatusOK, gin.H{"id": orderID})
 }
