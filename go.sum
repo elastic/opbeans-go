@@ -131,8 +131,8 @@ go.elastic.co/apm/module/apmgin/v2 v2.4.5 h1:sytsOobFwh+8xX0Iiew2t5d0qIc14uQBZcx
 go.elastic.co/apm/module/apmgin/v2 v2.4.5/go.mod h1:Df1utLcM+K8yJxPsE+AXwNboNrjNpaR68qFYHqN+0jU=
 go.elastic.co/apm/module/apmhttp/v2 v2.4.5 h1:t51CtOQdn6KSp11wNb0PxnhH09TjE+V4ajU8bqkLxmg=
 go.elastic.co/apm/module/apmhttp/v2 v2.4.5/go.mod h1:dmgyWIKzVk76gSgOWkTmPcSCqjRl7dfjWbBzFq8W3y0=
-go.elastic.co/apm/module/apmlogrus/v2 v2.4.4 h1:ftnZA6PuKQ7rvsFeIiuLBAiaNs5AUmV5Avf4NYhhJis=
-go.elastic.co/apm/module/apmlogrus/v2 v2.4.4/go.mod h1:BpLf5qSAwYnUOL4gX1OsoYebm2uvYqX2tGdf7WiFh5I=
+go.elastic.co/apm/module/apmlogrus/v2 v2.4.5 h1:SsPUTP07c/lW4US45KG4xhsiQp/8dyQGL9wA7S1NXaU=
+go.elastic.co/apm/module/apmlogrus/v2 v2.4.5/go.mod h1:rHy+MV55b2932VmVcwgldWfcJazf43Rc8R760QTdwh4=
 go.elastic.co/apm/module/apmsql/v2 v2.4.5 h1:OO+OrK193fku94e7sJo9XPvpF/+KaxjByjz1JqesHyc=
 go.elastic.co/apm/module/apmsql/v2 v2.4.5/go.mod h1:8eC7WzR6AzkkAOfdy426fMh2kVubqUo18tVU9zBAdrA=
 go.elastic.co/apm/v2 v2.4.5 h1:+01xPucS6YazBMYxbTSwNEsV9sgznFC0WW7x5dzxyPg=
