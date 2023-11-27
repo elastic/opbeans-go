@@ -67,3 +67,4 @@ targets:
       command: bash .ci/go-install-elastic-apm-go.sh
       environments:
         - name: PATH
+        - name: HOME
