@@ -135,8 +135,8 @@ go.elastic.co/apm/module/apmlogrus/v2 v2.4.7 h1:yvsnuZ5xU09p5kx0mIuALzOmfuKnvzpn
 go.elastic.co/apm/module/apmlogrus/v2 v2.4.7/go.mod h1:s8kf25kGErpdDkAfkyvdksXVlw7/YCXI5e37L3vHyQw=
 go.elastic.co/apm/module/apmsql/v2 v2.4.7 h1:E0OCco6Fzhx2vzg6CH6bQjooz1nO42lWDYYOYN7Fuk0=
 go.elastic.co/apm/module/apmsql/v2 v2.4.7/go.mod h1:QRT0GpRI7+xwzzhtIuATKectGkGsA+jqsEdTc5F3n+4=
-go.elastic.co/apm/v2 v2.4.7 h1:m5B2m59KgbiupuzFUkKqEvwHABIZxl2Ob0tCgc0XG9w=
-go.elastic.co/apm/v2 v2.4.7/go.mod h1:+CiBUdrrAGnGCL9TNx7tQz3BrfYV23L8Ljvotoc87so=
+go.elastic.co/apm/v2 v2.4.8 h1:3RuqxDjhgumT1BYxJGnVPdGY12lCzF+KGyvtSTynCYo=
+go.elastic.co/apm/v2 v2.4.8/go.mod h1:+CiBUdrrAGnGCL9TNx7tQz3BrfYV23L8Ljvotoc87so=
 go.elastic.co/fastjson v1.1.0 h1:3MrGBWWVIxe/xvsbpghtkFoPciPhOCmjsR/HfwEeQR4=
 go.elastic.co/fastjson v1.1.0/go.mod h1:boNGISWMjQsUPy/t6yqt2/1Wx4YNPSe+mZjlyw9vKKI=
 golang.org/x/arch v0.0.0-20210923205945-b76863e36670/go.mod h1:5om86z9Hs0C8fWVUuoMHwpExlXzs5Tkyp9hOrfG7pp8=
