@@ -13,8 +13,8 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.4
-	go.elastic.co/apm/module/apmgin/v2 v2.4.7
-	go.elastic.co/apm/module/apmhttp/v2 v2.4.7
+	go.elastic.co/apm/module/apmgin/v2 v2.4.8
+	go.elastic.co/apm/module/apmhttp/v2 v2.4.8
 	go.elastic.co/apm/module/apmlogrus/v2 v2.4.8
 	go.elastic.co/apm/module/apmsql/v2 v2.4.8
 	go.elastic.co/apm/v2 v2.4.8
