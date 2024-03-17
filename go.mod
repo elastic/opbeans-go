@@ -17,7 +17,7 @@ require (
 	go.elastic.co/apm/module/apmhttp/v2 v2.4.8
 	go.elastic.co/apm/module/apmlogrus/v2 v2.4.8
 	go.elastic.co/apm/module/apmsql/v2 v2.4.8
-	go.elastic.co/apm/v2 v2.4.8
+	go.elastic.co/apm/v2 v2.5.0
 )
 
 require (
