@@ -16,7 +16,7 @@ require (
 	go.elastic.co/apm/module/apmgin/v2 v2.5.0
 	go.elastic.co/apm/module/apmhttp/v2 v2.5.0
 	go.elastic.co/apm/module/apmlogrus/v2 v2.4.8
-	go.elastic.co/apm/module/apmsql/v2 v2.4.8
+	go.elastic.co/apm/module/apmsql/v2 v2.5.0
 	go.elastic.co/apm/v2 v2.5.0
 )
 
@@ -50,9 +50,9 @@ require (
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	go.elastic.co/fastjson v1.1.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
-	golang.org/x/crypto v0.17.0 // indirect
-	golang.org/x/net v0.17.0 // indirect
-	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/crypto v0.20.0 // indirect
+	golang.org/x/net v0.21.0 // indirect
+	golang.org/x/sys v0.17.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
