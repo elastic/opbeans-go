@@ -15,7 +15,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	go.elastic.co/apm/module/apmgin/v2 v2.6.0
 	go.elastic.co/apm/module/apmhttp/v2 v2.6.0
-	go.elastic.co/apm/module/apmlogrus/v2 v2.5.0
+	go.elastic.co/apm/module/apmlogrus/v2 v2.6.0
 	go.elastic.co/apm/module/apmsql/v2 v2.5.0
 	go.elastic.co/apm/v2 v2.6.0
 )
