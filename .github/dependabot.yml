@@ -10,6 +10,14 @@ updates:
       interval: "weekly"
       day: "sunday"
       time: "22:00"
+    groups:
+      gin:
+        patterns:
+        - "github.com/gin-contrib/*"
+        - "github.com/gin-gonic/*"
+      go-agent:
+        patterns:
+        - "go.elastic.co/apm*"
     reviewers:
       - "elastic/apm-agent-go"
 
