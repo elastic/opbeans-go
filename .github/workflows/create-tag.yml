@@ -1,0 +1,26 @@
+---
+# Takes the version of elastic-apm-go in the go.mod file and creates a tag
+# if the tag does not exist yet.
+name: create-tag
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # also fetch tags
+
+    - uses: actions/setup-go@v5
+      with:
+        go-version-file: go.mod
+
+    - run: make create-tag
