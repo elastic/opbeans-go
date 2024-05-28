@@ -7,12 +7,11 @@ scms:
   githubConfig:
     kind: github
     spec:
-      user: '{{ requiredEnv "GIT_USER" }}'
-      email: '{{ requiredEnv "GIT_EMAIL" }}'
+      user: '{{ requiredEnv "GITHUB_ACTOR" }}'
       owner: elastic
       repository: opbeans-go
       token: '{{ requiredEnv "GITHUB_TOKEN" }}'
-      username: '{{ requiredEnv "GIT_USER" }}'
+      username: '{{ requiredEnv "GITHUB_ACTOR" }}'
       branch: main
 
 actions:
@@ -32,7 +31,7 @@ sources:
       owner: "elastic"
       repository: "apm-agent-go"
       token: '{{ requiredEnv "GITHUB_TOKEN" }}'
-      username: '{{ requiredEnv "GIT_USER" }}'
+      username: '{{ requiredEnv "GITHUB_ACTOR" }}'
       versionFilter:
         kind: regex
         pattern: v(\d*)\.(\d*)\.(\d*)$
