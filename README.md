@@ -10,7 +10,7 @@ The simplest way to run this demo is by using the
 provided docker-compose.yml:
 
 ```bash
-docker-compose up
+docker compose up
 ```
 
 ## Running with Elastic Cloud
@@ -19,7 +19,7 @@ docker-compose up
 1. Add environmental variables `ELASTIC_CLOUD_ID` and `ELASTIC_CLOUD_CREDENTIALS` (in format `login:password`)
 2. Run
 ```bash
-docker-compose -f docker-compose-elastic-cloud.yml up
+docker compose -f docker-compose-elastic-cloud.yml up
 ```
 
 ## Testing locally
