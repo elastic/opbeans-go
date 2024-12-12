@@ -1,6 +1,6 @@
 module github.com/elastic/opbeans-go
 
-go 1.20
+go 1.22
 
 require (
 	github.com/gin-contrib/cache v1.3.0
