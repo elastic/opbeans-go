@@ -1,4 +1,4 @@
-FROM golang:1.24.1
+FROM golang:1.24.2
 ENV GO111MODULE=on
 COPY go.mod go.sum /src/opbeans-go/
 WORKDIR /src/opbeans-go
