@@ -4,7 +4,7 @@ go 1.24
 
 require (
 	github.com/gin-contrib/cache v1.3.2
-	github.com/gin-contrib/pprof v1.5.2
+	github.com/gin-contrib/pprof v1.5.3
 	github.com/gin-gonic/gin v1.10.0
 	github.com/gomodule/redigo v1.9.2
 	github.com/jmoiron/sqlx v1.4.0
@@ -50,11 +50,11 @@ require (
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
 	go.elastic.co/fastjson v1.1.0 // indirect
-	golang.org/x/arch v0.15.0 // indirect
-	golang.org/x/crypto v0.36.0 // indirect
+	golang.org/x/arch v0.16.0 // indirect
+	golang.org/x/crypto v0.37.0 // indirect
 	golang.org/x/net v0.38.0 // indirect
-	golang.org/x/sys v0.31.0 // indirect
-	golang.org/x/text v0.23.0 // indirect
+	golang.org/x/sys v0.32.0 // indirect
+	golang.org/x/text v0.24.0 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	howett.net/plist v0.0.0-20181124034731-591f970eefbb // indirect
