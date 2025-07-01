@@ -18,8 +18,6 @@ updates:
       go-agent:
         patterns:
         - "go.elastic.co/apm*"
-    reviewers:
-      - "elastic/apm-agent-go"
 
   # Enable version updates for Docker
   - package-ecosystem: "docker"
@@ -29,8 +27,6 @@ updates:
       interval: "weekly"
       day: "sunday"
       time: "22:00"
-    reviewers:
-      - "elastic/apm-agent-go"
 
   # GitHub actions
   - package-ecosystem: "github-actions"
