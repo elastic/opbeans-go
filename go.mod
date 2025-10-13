@@ -6,7 +6,7 @@ require (
 	github.com/gin-contrib/cache v1.4.1
 	github.com/gin-contrib/pprof v1.5.3
 	github.com/gin-gonic/gin v1.11.0
-	github.com/gomodule/redigo v1.9.2
+	github.com/gomodule/redigo v1.9.3
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/lib/pq v1.10.9
 	github.com/mattn/go-sqlite3 v1.14.32
